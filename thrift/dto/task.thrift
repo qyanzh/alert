@@ -1,0 +1,20 @@
+namespace go rpc_dto
+
+struct Task{
+    1:i64 Id
+    2:string Code
+    3:string Name
+    4:i64 RuleId
+    5:i64 Frequency
+    6:bool Enable
+    7:string LastTime
+    8:string LastStatus
+}
+struct TaskResponse{
+    1:Task task
+    2:string err
+}
+struct TasksResponse{
+    1:list<Task> tasks
+    2:string err
+}
