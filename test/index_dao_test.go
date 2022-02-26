@@ -33,7 +33,7 @@ func TestAddComputationalIndex(t *testing.T) {
 	index.Type = model.Computational
 	index.Code = "half of turnover recent 1 hour"
 	index.Name = "最近一小时营业额的一半"
-	index.Expr = "index{turnover} / num{2}"
+	index.Expr = "index[turnover] / num[2]"
 	indexExpr := evaluator.ToIndexExpr(index.Expr)
 	fmt.Println(indexExpr)
 	index.Serialized = indexExpr.ToJson()
@@ -46,7 +46,7 @@ func TestAddComputationalIndex2(t *testing.T) {
 	index.Type = model.Computational
 	index.Code = "half of turnover recent 20 min"
 	index.Name = "最近20分钟营业额的一半"
-	index.Expr = "index{turnover} / num{2}"
+	index.Expr = "index[turnover] / num[2]"
 	indexExpr := evaluator.ToIndexExpr(index.Expr)
 	fmt.Println(indexExpr)
 	index.Serialized = indexExpr.ToJson()
@@ -67,7 +67,7 @@ func TestAddComputationalIndex3(t *testing.T) {
 	index.Type = model.Computational
 	index.Code = "half of turnover recent 3 min"
 	index.Name = "最近3分钟营业额的一半"
-	index.Expr = "index{turnover} / num{2}"
+	index.Expr = "index[turnover] / num[2]"
 	indexExpr := evaluator.ToIndexExpr(index.Expr)
 	fmt.Println(indexExpr)
 	index.Serialized = indexExpr.ToJson()

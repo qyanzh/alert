@@ -139,18 +139,18 @@ func ToIndexExpr(expr string) *IndexExpr {
 		} else {
 			if isOp(r) {
 				// 弹出栈中优先级>=当前运算符的运算符
-				for top := opStack.peek(); top != 0 && top != '{' && opGE(top, r); top = opStack.peek() {
+				for top := opStack.peek(); top != 0 && top != '(' && opGE(top, r); top = opStack.peek() {
 					opStack, _ = opStack.pop()
 					nodes = append(nodes, IndexNode{IndexNodeType: op, Op: top})
 				}
 				opStack = opStack.push(r)
-			} else if r == '{' {
+			} else if r == '(' {
 				opStack = opStack.push(r)
-			} else if r == '}' {
+			} else if r == ')' {
 				// 弹出栈中所有运算符直到{
 				for top := opStack.peek(); top != 0; top = opStack.peek() {
 					opStack, _ = opStack.pop()
-					if top != '{' {
+					if top != '(' {
 						nodes = append(nodes, IndexNode{IndexNodeType: op, Op: top})
 					} else {
 						break
@@ -167,14 +167,14 @@ func ToIndexExpr(expr string) *IndexExpr {
 	return &nodes
 }
 
-// 取出xxx{...}中的内容
+// 取出xxx[...]中的内容
 func decodeContent(expr string) (content string, offset int) {
 	var begin, end int
 	for i := 0; i < len(expr); {
 		r, size := utf8.DecodeRuneInString(expr[i:])
-		if r == '{' {
+		if r == '[' {
 			begin = i + size
-		} else if r == '}' {
+		} else if r == ']' {
 			end = i
 			content = expr[begin:end]
 			offset = i + size

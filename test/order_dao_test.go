@@ -50,6 +50,6 @@ func TestSelectOrderByTimeRange(t *testing.T) {
 }
 
 func TestSelectValue(t *testing.T) {
-	r := orderDao.SelectValue("sum(turnover)", 0, 60*30)
+	r := orderDao.SelectValue("sum[turnover]", 0, 60*30)
 	fmt.Println(r)
 }
