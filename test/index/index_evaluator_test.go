@@ -3,7 +3,7 @@
  * @create  2022/02/26 15:56
  */
 
-package test
+package index
 
 import (
 	"alert/internal/evaluator"

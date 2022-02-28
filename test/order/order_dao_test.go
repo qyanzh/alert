@@ -3,7 +3,7 @@
  * @create  2022/02/26 21:38
  */
 
-package test
+package order
 
 import (
 	"alert/internal/dao"

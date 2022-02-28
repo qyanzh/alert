@@ -3,7 +3,7 @@
  * @create  2022/02/26 22:47
  */
 
-package test
+package index
 
 import (
 	"alert/internal/dao"
