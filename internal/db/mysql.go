@@ -34,7 +34,7 @@ func init() {
 		//&model.Alert{},
 		&model.Index{},
 		&model.Order{},
-		//&model.Rule{},
+		&model.Rule{},
 		//&model.Task{},
 	)
 	if err != nil {
