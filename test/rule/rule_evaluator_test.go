@@ -7,9 +7,9 @@ import (
 )
 
 func TestToNormalRuleExpr(t *testing.T) {
-	expr := "index[turning] <= 200"
+	expr := "index[turnover] <= 200"
 	node := evaluator.ToNormalRuleExpr(expr)
-	println("code:" + node.IndexCode)
+	println("id:" + strconv.FormatUint(uint64(node.IndexId), 10))
 	println("op:" + node.Op)
 	println("num:" + strconv.FormatFloat(node.Number, 'e', 16, 64))
 }

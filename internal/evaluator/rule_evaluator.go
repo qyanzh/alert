@@ -1,15 +1,34 @@
 package evaluator
 
 import (
+	"alert/internal/dao"
 	"encoding/json"
 	"log"
 	"strconv"
 )
 
+var indexDao dao.IndexDao
+
+func init() {
+	indexDao = *dao.NewIndexDao()
+}
+
 type NormalRuleNode struct {
-	IndexCode string
-	Number    float64
-	Op        string
+	IndexId uint
+	Number  float64
+	Op      string
+}
+type CompleteType int8
+
+const (
+	ruleOp CompleteType = iota
+	number
+	ruleNode
+)
+
+type CompleteNode struct {
+	Type    CompleteType
+	content interface{}
 }
 
 func (r *NormalRuleNode) ToJson() []byte {
@@ -20,6 +39,7 @@ func (r *NormalRuleNode) ToJson() []byte {
 	return s
 }
 
+//普通节点的处理
 func isCompareOp(c uint8) bool {
 	if c == '>' || c == '<' || c == '=' || c == '!' {
 		return true
@@ -75,10 +95,18 @@ func getNextNum(expr string, nowst int) (st int, ed int) {
 func ToNormalRuleExpr(expr string) NormalRuleNode {
 	node := NormalRuleNode{}
 	st, ed := getNextCode(expr, 0)
-	node.IndexCode = expr[st:ed]
+	node.IndexId = indexDao.SelectIndexByCode(expr[st:ed]).ID
 	st, ed = getNextOp(expr, ed)
 	node.Op = expr[st:ed]
 	st, ed = getNextNum(expr, ed)
 	node.Number, _ = strconv.ParseFloat(expr[st:ed], 64)
 	return node
+}
+
+//复杂节点的处理
+func isLogicOp(c uint8) bool {
+	if c == '&' || c == '|' || c == '^' {
+		return true
+	}
+	return false
 }
