@@ -7,9 +7,9 @@ import (
 )
 
 type NormalRuleNode struct {
-	indexCode string
-	number    float64
-	op        string
+	IndexCode string
+	Number    float64
+	Op        string
 }
 
 func (r *NormalRuleNode) ToJson() []byte {
@@ -30,13 +30,13 @@ func isCompareOp(c uint8) bool {
 //从nowst开始找下一个code
 func getNextCode(expr string, nowst int) (st int, ed int) {
 	for st = nowst; st < len(expr); st++ {
-		if st == '[' {
+		if expr[st] == '[' {
 			st++
 			break
 		}
 	}
 	for ed = st; ed < len(expr); ed++ {
-		if ed == ']' {
+		if expr[ed] == ']' {
 			break
 		}
 	}
@@ -75,10 +75,10 @@ func getNextNum(expr string, nowst int) (st int, ed int) {
 func ToNormalRuleExpr(expr string) NormalRuleNode {
 	node := NormalRuleNode{}
 	st, ed := getNextCode(expr, 0)
-	node.indexCode = expr[st:ed]
+	node.IndexCode = expr[st:ed]
 	st, ed = getNextOp(expr, ed)
-	node.op = expr[st:ed]
+	node.Op = expr[st:ed]
 	st, ed = getNextNum(expr, ed)
-	node.number, _ = strconv.ParseFloat(expr[st:ed], 64)
+	node.Number, _ = strconv.ParseFloat(expr[st:ed], 64)
 	return node
 }
