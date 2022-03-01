@@ -20,7 +20,7 @@ func TestAddNormalRule(t *testing.T) {
 	rule.RoomId = 13
 	rule.Type = model.Normal_Rule
 	rule.Expr = "index[half of turnover recent 3 min] >= 20"
-	ruleNode := evaluator.ToNormalRuleExpr(rule.Expr)
+	ruleNode, _ := evaluator.ToNormalRuleExpr(rule.Expr)
 	rule.Serialized = ruleNode.ToJson()
 	ruleDao.AddRule(&rule)
 
@@ -30,7 +30,7 @@ func TestAddNormalRule(t *testing.T) {
 	rule.RoomId = 13
 	rule.Type = model.Normal_Rule
 	rule.Expr = "index[turnover] = 200"
-	ruleNode = evaluator.ToNormalRuleExpr(rule.Expr)
+	ruleNode, _ = evaluator.ToNormalRuleExpr(rule.Expr)
 	rule.Serialized = ruleNode.ToJson()
 	ruleDao.AddRule(&rule)
 }
