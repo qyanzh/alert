@@ -15,7 +15,7 @@ func NewAlertDao() *AlertDao {
 	return &AlertDao{db: db.DbClient}
 }
 
-func (dao *AlertDao) AddAlert(alert *model.Rule) (int64, error) {
+func (dao *AlertDao) AddAlert(alert *model.Alert) (int64, error) {
 	result := dao.db.Create(&alert)
 	return result.RowsAffected, result.Error
 }
@@ -24,13 +24,10 @@ func (dao *AlertDao) SelectAlertByID(ID uint) (*model.Alert, error) {
 	result := dao.db.First(&alert, ID)
 	return &alert, result.Error
 }
-func (dao *AlertDao) SelectAlertByOther(roomId uint, ruleId uint, startTime time.Time, endTime time.Time) (*[]model.Alert, error) {
+func (dao *AlertDao) SelectAlertByOther(ruleId uint, startTime time.Time, endTime time.Time) (*[]model.Alert, error) {
 	nowDb := dao.db
-	if roomId != -1 {
-		nowDb = nowDb.Where("room_id=?", roomId)
-	}
-	if ruleId != -1 {
-		nowDb = nowDb.Where("ruleId=?", ruleId)
+	if ruleId != 0 {
+		nowDb = nowDb.Where("rule_id=?", ruleId)
 	}
 	if startTime != time.Unix(0, 0) {
 		nowDb = nowDb.Where("time>?", startTime)

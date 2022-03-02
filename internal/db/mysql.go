@@ -31,7 +31,7 @@ func init() {
 	}
 
 	err = DbClient.AutoMigrate(
-		//&model.Alert{},
+		&model.Alert{},
 		&model.Index{},
 		&model.Order{},
 		&model.Rule{},
