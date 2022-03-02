@@ -34,7 +34,24 @@ func TestAddNormalRule(t *testing.T) {
 	rule.Serialized = ruleNode.ToJson()
 	ruleDao.AddRule(&rule)
 }
-
+func TestAddCompleteRule(t *testing.T) {
+	rule := model.Rule{}
+	rule.Code = "for 13 room half of turnover recent 3 min can/'t under 20 or equal 200"
+	rule.Name = "3分钟营业额的一半不能低于20或等于营业额200"
+	rule.RoomId = 13
+	rule.Type = model.Complex_Rule
+	rule.Expr = "rule[for 13 room half of turnover recent 3 min can/'t under 20]|rule[turnover equal 200]"
+	completeRule, _ := evaluator.ToCompleteRuleExpr(rule.Expr)
+	rule.Serialized = completeRule.ToJson()
+	_, err := ruleDao.AddRule(&rule)
+	if err != nil {
+		print(err.Error())
+	}
+}
 func TestDeleteRule(t *testing.T) {
-
+	ruleDao.DeleteRuleByID(3)
+}
+func TestSelectRule(t *testing.T) {
+	rule, _ := ruleDao.SelectRuleByID(3)
+	print(rule.Code)
 }

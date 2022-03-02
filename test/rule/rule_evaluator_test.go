@@ -21,4 +21,11 @@ func TestToComplexRuleExpr(t *testing.T) {
 		value.PrintContent()
 		print(" ")
 	}
+	println()
+	expr = "(rule[turnover equal 200] | rule[turnover equal 200])|rule[turnover equal 200]^rule[turnover equal 200]&rule[turnover equal 200]"
+	nodes, _ = evaluator.ToCompleteRuleExpr(expr)
+	for _, value := range *nodes {
+		value.PrintContent()
+		print(" ")
+	}
 }

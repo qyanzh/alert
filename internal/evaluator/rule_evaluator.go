@@ -22,6 +22,7 @@ type NormalRuleNode struct {
 	Number  float64
 	Op      string
 }
+
 type CompleteType int8
 
 const (
@@ -54,8 +55,17 @@ func (r *NormalRuleNode) ToJson() []byte {
 	}
 	return s
 }
+func (r *CompleteRule) ToJson() []byte {
+	s, err := json.Marshal(r)
+	if err != nil {
+		log.Panicln(err)
+	}
+	return s
+}
 
 //普通节点的处理
+type NormalRule NormalRuleNode
+
 var oplist = []uint8{'>', '<', '=', '!', '&', '|', '^', '(', ')'}
 
 func isCompareOp(c uint8) bool {
@@ -137,9 +147,6 @@ func ToNormalRuleExpr(expr string) (NormalRuleNode, error) {
 	node.Number, _ = strconv.ParseFloat(expr[st:ed], 64)
 	return node, nil
 }
-func CheckNormalRule(node NormalRuleNode, roomID uint) bool {
-	return true
-}
 
 //复杂节点的处理
 
@@ -174,8 +181,7 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 			}
 			nodes = append(nodes, CompleteNode{Type: RuleNode, Content: index.Id})
 		} else if nowType == numType {
-			num, _ := strconv.ParseFloat(expr[st:ed], 64)
-			nodes = append(nodes, CompleteNode{Type: RuleNumber, Content: num})
+			return &nodes, errors.New("请检查语法")
 		} else if nowType == opType {
 			r := rune(expr[st])
 			if isLogicOp(r) {
