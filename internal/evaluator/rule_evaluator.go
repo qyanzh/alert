@@ -55,12 +55,28 @@ func (r *NormalRuleNode) ToJson() []byte {
 	}
 	return s
 }
+func GetNormalRule(b []byte) *NormalRule {
+	rule := NormalRule{}
+	err := json.Unmarshal(b, &rule)
+	if err != nil {
+		log.Panicln(err)
+	}
+	return &rule
+}
 func (r *CompleteRule) ToJson() []byte {
 	s, err := json.Marshal(r)
 	if err != nil {
 		log.Panicln(err)
 	}
 	return s
+}
+func GetCompleteRule(b []byte) *CompleteRule {
+	rule := CompleteRule{}
+	err := json.Unmarshal(b, &rule)
+	if err != nil {
+		log.Panicln(err)
+	}
+	return &rule
 }
 
 //普通节点的处理

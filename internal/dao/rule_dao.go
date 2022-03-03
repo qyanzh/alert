@@ -4,6 +4,7 @@ import (
 	"alert/internal/db"
 	"alert/internal/model"
 	"gorm.io/gorm"
+	"time"
 )
 
 type RuleDao struct {
@@ -20,6 +21,7 @@ func (dao *RuleDao) AddRule(rule *model.Rule) (int64, error) {
 		var tempRule model.Rule
 		dao.db.Model(rule).Unscoped().Where("code=?", rule.Code).First(&tempRule)
 		rule.Id = tempRule.Id
+		rule.CreatedAt = time.Now()
 		dao.db.Model(rule).Unscoped().Where("code=?", rule.Code).Update("deleted_at", nil)
 		return dao.UpdateRule(rule)
 	}
@@ -32,8 +34,13 @@ func (dao *RuleDao) DeleteRuleByID(ID uint) (int64, error) {
 	return result.RowsAffected, result.Error
 }
 
+func (dao *RuleDao) DeleteRuleByCode(code string) (int64, error) {
+	result := dao.db.Where("code=?", code).Delete(&model.Rule{})
+	return result.RowsAffected, result.Error
+}
+
 func (dao *RuleDao) UpdateRule(rule *model.Rule) (int64, error) {
-	result := dao.db.Model(rule).Omit("created_at").Save(&rule)
+	result := dao.db.Save(&rule)
 	return result.RowsAffected, result.Error
 }
 

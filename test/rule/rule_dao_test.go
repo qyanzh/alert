@@ -51,6 +51,9 @@ func TestAddCompleteRule(t *testing.T) {
 func TestDeleteRule(t *testing.T) {
 	ruleDao.DeleteRuleByID(3)
 }
+func TestDeleteRuleByCode(t *testing.T) {
+	ruleDao.DeleteRuleByCode("for 13 room half of turnover recent 3 min can/'t under 20 or equal 200")
+}
 func TestSelectRule(t *testing.T) {
 	rule, _ := ruleDao.SelectRuleByID(3)
 	print(rule.Code)
