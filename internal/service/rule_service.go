@@ -75,7 +75,7 @@ func (service *RuleService) checkCompleteRule(completeRule *evaluator.CompleteRu
 			if err != nil {
 				return false, err
 			}
-			r, err := service.checkNormalRule(evaluator.GetNormalRule(rule.Serialized), rule.RoomId)
+			r, err := service.checkNormalRule(evaluator.GetNormalRule(rule.Serialized), roomId)
 			if err != nil {
 				return false, err
 			}
@@ -104,4 +104,16 @@ func (service *RuleService) checkCompleteRule(completeRule *evaluator.CompleteRu
 		return false, errors.New("请检查语法")
 	}
 	return s.Top(), nil
+}
+
+func (service *RuleService) CheckRule(code string) (bool, error) {
+	rule, err := service.SelectRule(code)
+	if err != nil {
+		return false, err
+	}
+	if rule.Type == model.Normal_Rule {
+		return service.checkNormalRule(evaluator.GetNormalRule(rule.Serialized), rule.RoomId)
+	} else {
+		return service.checkCompleteRule(evaluator.GetCompleteRule(rule.Serialized), rule.RoomId)
+	}
 }
