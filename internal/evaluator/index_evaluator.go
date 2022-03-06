@@ -75,54 +75,63 @@ func (ie *IndexExpr) String() string {
 
 // Eval 对后缀表达式求值
 func (ie IndexExpr) Eval(roomID uint, timeRange uint) float64 {
-	stack := list.New() // 存放操作数(float64)
+	numStack := list.New() // 存放操作数(float64)
 	for _, node := range ie {
 		switch node.IndexNodeType {
 		case op:
-			r := stack.Remove(stack.Back()).(float64)
-			l := stack.Remove(stack.Back()).(float64)
+			r := numStack.Remove(numStack.Back()).(float64)
+			l := numStack.Remove(numStack.Back()).(float64)
 			switch node.Op {
 			case '+':
-				stack.PushBack(l + r)
+				numStack.PushBack(l + r)
 			case '-':
-				stack.PushBack(l - r)
+				numStack.PushBack(l - r)
 			case '*':
-				stack.PushBack(l * r)
+				numStack.PushBack(l * r)
 			case '/':
-				stack.PushBack(l / r)
+				numStack.PushBack(l / r)
 			}
 		case num:
-			stack.PushBack(node.Num)
+			numStack.PushBack(node.Num)
 		case indexCode:
 			// TODO dao成员
 			indexDao := dao.NewIndexDao()
-			index := indexDao.SelectIndexByCode(node.IndexCode)
+			index, err := indexDao.SelectIndexByCode(node.IndexCode)
+			if err != nil {
+				log.Panicln(err)
+			}
 			orderDao := dao.NewOrderDao()
 			if index.Type == model.Normal {
 				if timeRange == 0 { // 若父指标无时间范围，使用子指标时间范围
 					timeRange = index.TimeRange
 				}
-				r := orderDao.SelectValue(index.Expr, roomID, timeRange)
-				stack.PushBack(r)
+				r, err := orderDao.SelectValue(index.Expr, roomID, timeRange)
+				if err != nil {
+					log.Panicln(err)
+				}
+				numStack.PushBack(r)
 			} else if index.Type == model.Computational {
 				// TODO 测试
 				subExpr := IndexExprFromJson(index.Serialized)
 				r := subExpr.Eval(roomID, timeRange)
-				stack.PushBack(r)
+				numStack.PushBack(r)
 			}
 		case rawExpr:
 			orderDao := dao.NewOrderDao()
-			r := orderDao.SelectValue(node.RawExpr, roomID, timeRange)
-			stack.PushBack(r)
+			r, err := orderDao.SelectValue(node.RawExpr, roomID, timeRange)
+			if err != nil {
+				log.Panicln(err)
+			}
+			numStack.PushBack(r)
 		}
 	}
-	return stack.Front().Value.(float64)
+	return numStack.Front().Value.(float64)
 }
 
 // ToIndexExpr 解析中缀表达式为后缀表达式结点数组
 func ToIndexExpr(expr string) *IndexExpr {
 	nodes := make(IndexExpr, 0)
-	opStack := make(stack, 0)
+	opStack := list.New()
 	for i := 0; i < len(expr); {
 		r, size := utf8.DecodeRuneInString(expr[i:])
 		if r == 'i' || r == 'n' || r == 'r' {
@@ -139,19 +148,25 @@ func ToIndexExpr(expr string) *IndexExpr {
 		} else {
 			if isOp(r) {
 				// 弹出栈中优先级>=当前运算符的运算符
-				for top := opStack.peek(); top != 0 && top != '(' && opGE(top, r); top = opStack.peek() {
-					opStack, _ = opStack.pop()
-					nodes = append(nodes, IndexNode{IndexNodeType: op, Op: top})
+				for top := opStack.Back(); top != nil; top = opStack.Back() {
+					topv := top.Value.(rune)
+					if topv != '(' && opGE(topv, r) {
+						nodes = append(nodes, IndexNode{IndexNodeType: op, Op: topv})
+						opStack.Remove(top)
+					} else {
+						break
+					}
 				}
-				opStack = opStack.push(r)
+				opStack.PushBack(r)
 			} else if r == '(' {
-				opStack = opStack.push(r)
+				opStack.PushBack(r)
 			} else if r == ')' {
-				// 弹出栈中所有运算符直到{
-				for top := opStack.peek(); top != 0; top = opStack.peek() {
-					opStack, _ = opStack.pop()
-					if top != '(' {
-						nodes = append(nodes, IndexNode{IndexNodeType: op, Op: top})
+				// 弹出栈中所有运算符直到[
+				for top := opStack.Back(); top != nil; top = opStack.Back() {
+					topv := top.Value.(rune)
+					opStack.Remove(top)
+					if topv != '(' {
+						nodes = append(nodes, IndexNode{IndexNodeType: op, Op: topv})
 					} else {
 						break
 					}
@@ -160,9 +175,9 @@ func ToIndexExpr(expr string) *IndexExpr {
 			i += size
 		}
 	}
-	for top := opStack.peek(); top != 0; top = opStack.peek() {
-		opStack, _ = opStack.pop()
-		nodes = append(nodes, IndexNode{IndexNodeType: op, Op: top})
+	for top := opStack.Back(); top != nil; top = opStack.Back() {
+		nodes = append(nodes, IndexNode{IndexNodeType: op, Op: top.Value.(rune)})
+		opStack.Remove(top)
 	}
 	return &nodes
 }

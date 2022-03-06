@@ -20,12 +20,13 @@ func init() {
 }
 
 func TestAddOrder(t *testing.T) {
-	order := model.Order{}
+	order := &model.Order{}
 	order.RoomID = 0
 	order.Turnover = 10
 	order.OrderTime = time.Now()
-	fmt.Println(orderDao.AddOrder(&order))
-	fmt.Printf("%+v", orderDao.SelectOrderByID(order.ID))
+	fmt.Println(orderDao.AddOrder(order))
+	order, _ = orderDao.SelectOrderByID(order.ID)
+	fmt.Printf("%+v", order)
 }
 
 func TestSelectOrdersByRoomID(t *testing.T) {
@@ -37,7 +38,7 @@ func TestDeleteOrdersByID(t *testing.T) {
 }
 
 func TestUpdateOrder(t *testing.T) {
-	order := orderDao.SelectOrderByID(4)
+	order, _ := orderDao.SelectOrderByID(4)
 	order.RoomID = 1
 	orderDao.UpdateOrder(order)
 }
@@ -45,11 +46,11 @@ func TestUpdateOrder(t *testing.T) {
 func TestSelectOrderByTimeRange(t *testing.T) {
 	end := time.Now()
 	begin := time.Now().Add(-120 * time.Minute)
-	orders := orderDao.SelectOrderByRoomIDTimeRange(0, begin, end)
+	orders, _ := orderDao.SelectOrderByRoomIDTimeRange(0, begin, end)
 	fmt.Println(orders)
 }
 
 func TestSelectValue(t *testing.T) {
-	r := orderDao.SelectValue("sum[turnover]", 0, 60*30)
+	r, _ := orderDao.SelectValue("sum[turnover]", 0, 60*30)
 	fmt.Println(r)
 }
