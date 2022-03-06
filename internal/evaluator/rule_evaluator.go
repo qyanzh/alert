@@ -150,7 +150,11 @@ func ToNormalRuleExpr(expr string) (NormalRuleNode, error) {
 	if nowType != codeType {
 		return node, errors.New("语法错误")
 	}
-	node.IndexId = indexDao.SelectIndexByCode(expr[st:ed]).ID
+	index, err := indexDao.SelectIndexByCode(expr[st:ed])
+	if err != nil {
+		return node, err
+	}
+	node.IndexId = index.ID
 	st, ed, nowType = getNext(expr, ed, false)
 	if nowType != opType {
 		return node, errors.New("语法错误")
@@ -229,4 +233,26 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 		nodes = append(nodes, CompleteNode{Type: RuleOp, Content: top})
 	}
 	return &nodes, nil
+}
+
+type stack []rune
+
+func (s stack) push(v rune) stack {
+	return append(s, v)
+}
+
+func (s stack) pop() (stack, rune) {
+	l := len(s)
+	if l == 0 {
+		return s[:], 0
+	}
+	return s[:l-1], s[l-1]
+}
+
+func (s stack) peek() rune {
+	l := len(s)
+	if l == 0 {
+		return 0
+	}
+	return s[len(s)-1]
 }
