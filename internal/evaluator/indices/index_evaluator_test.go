@@ -57,14 +57,14 @@ func TestComputationalIndex(t *testing.T) {
 	index.Code = "turnover*4"
 	index.Type = model.Computational
 	index.Expr = "index[turnover*2] * num[2]"
-	json, err := InfixToPostExprJson(index.Expr)
+	json, _, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
 		t.Error(err)
 	}
 	index.Serialized = json
 	_, _ = indexEvaluator.indexDao.UpdateIndex(&index)
 
-	result, err := indexEvaluator.Eval(&index, 0, 0)
+	result, err := indexEvaluator.Eval(&index, 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -74,12 +74,12 @@ func TestComputationalIndex(t *testing.T) {
 func TestSyntaxErrorExprNoNum(t *testing.T) {
 	index := model.Index{}
 	index.Expr = "index[turnover*2] * 2"
-	json, err := InfixToPostExprJson(index.Expr)
+	json, _, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	index.Serialized = json
-	result, err := indexEvaluator.Eval(&index, 0, 0)
+	result, err := indexEvaluator.Eval(&index, 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -91,12 +91,12 @@ func TestSyntaxErrorExprCapitalNum(t *testing.T) {
 	index.Expr = "index[turnover*2} * num[2]"
 	pe, err := infixToPostExpr(index.Expr)
 	t.Log(pe)
-	json, err := InfixToPostExprJson(index.Expr)
+	json, _, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	index.Serialized = json
-	result, err := indexEvaluator.Eval(&index, 0, 0)
+	result, err := indexEvaluator.Eval(&index, 0)
 	if err != nil {
 		t.Error(err)
 	}

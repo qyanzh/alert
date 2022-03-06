@@ -100,3 +100,15 @@ func TestSelectNonExistIndexByCode(t *testing.T) {
 		t.Error("查出不存在的index")
 	}
 }
+
+func TestSelectIndexByCodeBatch(t *testing.T) {
+	indices, err := indexDao.SelectIndexByCodeBatch([]string{
+		"turnover",
+		"half of turnover recent 3 min",
+		"turnover*4",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(indices)
+}

@@ -6,6 +6,7 @@
 package indices
 
 import (
+	"alert/internal/model"
 	"container/list"
 	"encoding/json"
 	"fmt"
@@ -34,16 +35,24 @@ const (
 	raw                  // sql表达式，直接拼接在select中
 )
 
-func InfixToPostExprJson(infix string) ([]byte, error) {
+func InfixToPostExprJson(infix string) ([]byte, model.IndexType, error) {
 	postExpr, err := infixToPostExpr(infix)
 	if err != nil {
-		return nil, err
+		return nil, 0, fmt.Errorf("syntax error: %v", err)
+	}
+	// 判定是否有子指标
+	indexType := model.Normal
+	for _, node := range *postExpr {
+		if node.NodeType == code {
+			indexType = model.Computational
+			break
+		}
 	}
 	js, err := postExpr.json()
 	if err != nil {
-		return nil, fmt.Errorf("post expr(from %s) to json: %v", infix, err)
+		return nil, 0, fmt.Errorf("post expr(from %s) to json: %v", infix, err)
 	}
-	return js, nil
+	return js, indexType, nil
 }
 
 func postExprFromJson(bs []byte) (*postExpr, error) {
@@ -100,7 +109,7 @@ func infixToPostExpr(infix string) (*postExpr, error) {
 					}
 				}
 			} else {
-				return nil, fmt.Errorf("syntax error: unexpected rune %c", r)
+				return nil, fmt.Errorf("unexpected rune %c", r)
 			}
 			i += size
 		}

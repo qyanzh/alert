@@ -74,6 +74,15 @@ func (dao *IndexDao) SelectIndexByCode(code string) (*model.Index, error) {
 	return &index, nil
 }
 
+func (dao *IndexDao) SelectIndexByCodeBatch(codes []string) (*[]model.Index, error) {
+	indices := make([]model.Index, len(codes))
+	result := dao.db.Where("code IN ?", codes).Find(&indices)
+	if result.Error != nil {
+		return nil, fmt.Errorf("selecting index by codes=%s: %v", codes, result.Error)
+	}
+	return &indices, nil
+}
+
 func (dao *IndexDao) SelectAllIndices() (*[]model.Index, error) {
 	var indices []model.Index
 	result := dao.db.Find(&indices)

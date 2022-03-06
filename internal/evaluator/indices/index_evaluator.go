@@ -21,12 +21,12 @@ func NewIndexEvaluator(indexDao *dao.IndexDao, orderDao *dao.OrderDao) *IndexEva
 	return &IndexEvaluator{indexDao, orderDao}
 }
 
-func (e *IndexEvaluator) Eval(index *model.Index, roomID, timeRange uint) (float64, error) {
+func (e *IndexEvaluator) Eval(index *model.Index, roomID uint) (float64, error) {
 	postExpr, err := postExprFromJson(index.Serialized)
 	if err != nil {
 		return 0, err
 	}
-	return e.eval(postExpr, roomID, timeRange)
+	return e.eval(postExpr, roomID, index.TimeRange)
 }
 
 // eval 对后缀表达式求值
@@ -37,11 +37,11 @@ func (e *IndexEvaluator) eval(indexExpr *postExpr, roomID, timeRange uint) (floa
 		case op:
 			operand2, err := popOperand(numStack)
 			if err != nil {
-				return 0, fmt.Errorf("handling Op %v: %v", op, err)
+				return 0, fmt.Errorf("evaluate failed, handling Op %v: %v", op, err)
 			}
 			operand1, err := popOperand(numStack)
 			if err != nil {
-				return 0, fmt.Errorf("handling Op %v: %v", op, err)
+				return 0, fmt.Errorf("evaluate failed, handling Op %v: %v", op, err)
 			}
 			numStack.PushBack(doOperation(operand1, operand2, node.Op))
 		case num:
@@ -49,7 +49,7 @@ func (e *IndexEvaluator) eval(indexExpr *postExpr, roomID, timeRange uint) (floa
 		case code:
 			indexValue, err := e.extractSubIndexValue(node.Code, roomID, timeRange)
 			if err != nil {
-				return 0, fmt.Errorf("extracting subIndex(Code=%s): %v", node.Code, err)
+				return 0, fmt.Errorf("evaluate failed, extracting subIndex(Code=%s): %v", node.Code, err)
 			}
 			numStack.PushBack(indexValue)
 		case raw:
