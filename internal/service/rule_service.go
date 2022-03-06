@@ -23,14 +23,22 @@ func (service *RuleService) SelectAllRules() (*[]model.Rule, error) {
 	return service.ruleDao.SelectAllRules()
 }
 
+func (service *RuleService) SelectRuleById(id uint) (*model.Rule, error) {
+	return service.ruleDao.SelectRuleByID(id)
+}
+
+//ruleType 为true是normalrule
 func (service *RuleService) AddRule(roomId uint, name string, code string, ruleType bool, content string) (*model.Rule, error) {
-	var nowType model.RuleType
+	rule := model.Rule{Code: code, Name: name, RoomId: roomId, Expr: content}
 	if ruleType {
-		nowType = model.Normal_Rule
+		rule.Type = model.Normal_Rule
+		ruleNode, _ := evaluator.ToNormalRuleExpr(rule.Expr)
+		rule.Serialized = ruleNode.ToJson()
 	} else {
-		nowType = model.Complex_Rule
+		rule.Type = model.Complex_Rule
+		ruleNode, _ := evaluator.ToCompleteRuleExpr(rule.Expr)
+		rule.Serialized = ruleNode.ToJson()
 	}
-	rule := model.Rule{Code: code, Name: name, RoomId: roomId, Type: nowType, Expr: content}
 	_, err := service.ruleDao.AddRule(&rule)
 	if err != nil {
 		return &rule, err
