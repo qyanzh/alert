@@ -22,10 +22,26 @@ func init() {
 func TestAddNormalIndex(t *testing.T) {
 	index := model.Index{}
 	index.Type = model.Normal
-	index.Code = "turnover"
+	index.Code = "turnover2"
 	index.Name = "总营业额"
-	index.Expr = "turnover"
-	indexDao.AddIndex(&index)
+	index.Expr = "sum(turnover)"
+	_, err := indexDao.AddIndex(&index)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestUpdateIndex(t *testing.T) {
+	index, err := indexDao.SelectIndexByCode("turnover2")
+	if err != nil {
+		t.Error(err)
+	}
+	index.Name = "修改后的" + index.Name
+	rows, err := indexDao.UpdateIndex(index)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rows)
 }
 
 func TestAddComputationalIndex(t *testing.T) {
@@ -56,7 +72,7 @@ func TestAddComputationalIndex2(t *testing.T) {
 
 func TestComputationalIndex2(t *testing.T) {
 	code := "half of turnover recent 20 min"
-	index := indexDao.SelectIndexByCode(code)
+	index, _ := indexDao.SelectIndexByCode(code)
 	fmt.Printf("%+v\n", index)
 	result := evaluator.IndexExprFromJson(index.Serialized).Eval(0, index.TimeRange)
 	fmt.Printf("%s: %f\n", index.Name, result)
@@ -77,7 +93,7 @@ func TestAddComputationalIndex3(t *testing.T) {
 
 func TestComputationalIndex3(t *testing.T) {
 	code := "half of turnover recent 3 min"
-	index := indexDao.SelectIndexByCode(code)
+	index, _ := indexDao.SelectIndexByCode(code)
 	fmt.Printf("%+v\n", index)
 	result := evaluator.IndexExprFromJson(index.Serialized).Eval(0, index.TimeRange)
 	fmt.Printf("%s: %f\n", index.Name, result)

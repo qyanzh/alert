@@ -20,44 +20,53 @@ func NewOrderDao() *OrderDao {
 	return &OrderDao{db: db.DbClient}
 }
 
-func (dao *OrderDao) AddOrder(order *model.Order) int64 {
-	result := dao.db.Create(&order)
-	return result.RowsAffected
+func (dao *OrderDao) AddOrder(order *model.Order) (int64, error) {
+	result := dao.db.Create(order)
+	return result.RowsAffected, result.Error
 }
 
-func (dao *OrderDao) DeleteOrderByID(ID uint) int64 {
+func (dao *OrderDao) DeleteOrderByID(ID uint) (int64, error) {
 	result := dao.db.Delete(&model.Order{}, ID)
-	return result.RowsAffected
+	return result.RowsAffected, result.Error
 }
 
-func (dao *OrderDao) UpdateOrder(order *model.Order) int64 {
-	result := dao.db.Save(&order)
-	return result.RowsAffected
+func (dao *OrderDao) UpdateOrder(order *model.Order) (int64, error) {
+	result := dao.db.Save(order)
+	return result.RowsAffected, result.Error
 }
 
-func (dao *OrderDao) SelectOrderByID(ID uint) *model.Order {
+func (dao *OrderDao) SelectOrderByID(ID uint) (*model.Order, error) {
 	order := model.Order{}
-	dao.db.First(&order, ID)
-	return &order
+	result := dao.db.First(&order, ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &order, nil
 }
 
-func (dao *OrderDao) SelectOrderByRoomIDTimeRange(roomID uint, begin, end time.Time) *[]model.Order {
+func (dao *OrderDao) SelectOrderByRoomIDTimeRange(roomID uint, begin, end time.Time) (*[]model.Order, error) {
 	var orders []model.Order
-	dao.db.Where("room_id = ? AND order_time BETWEEN ? AND ?", roomID, begin, end).Find(&orders)
-	return &orders
+	result := dao.db.Where("room_id = ? AND order_time BETWEEN ? AND ?", roomID, begin, end).Find(&orders)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &orders, nil
 }
 
-func (dao *OrderDao) SelectOrdersByRoomID(roomID uint) *[]model.Order {
+func (dao *OrderDao) SelectOrdersByRoomID(roomID uint) (*[]model.Order, error) {
 	var orders []model.Order
-	dao.db.Where(&model.Order{RoomID: roomID}).Find(&orders)
-	return &orders
+	result := dao.db.Where(&model.Order{RoomID: roomID}).Find(&orders)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &orders, nil
 }
 
 type Result struct {
 	Result float64
 }
 
-func (dao *OrderDao) SelectValue(expr string, roomID uint, timeRange uint) float64 {
+func (dao *OrderDao) SelectValue(expr string, roomID uint, timeRange uint) (float64, error) {
 	r := Result{}
 	where := "`orders`.`deleted_at` IS NULL AND room_id = ?"
 	param := make([]interface{}, 0)
@@ -69,9 +78,9 @@ func (dao *OrderDao) SelectValue(expr string, roomID uint, timeRange uint) float
 		param = append(param, begin)
 		param = append(param, end)
 	}
-	dao.db.Table(model.Order{}.TableName()).
+	result := dao.db.Table(model.Order{}.TableName()).
 		Select(expr+" result").
 		Where(where, param...).
 		Find(&r)
-	return r.Result
+	return r.Result, result.Error
 }
