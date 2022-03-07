@@ -53,9 +53,14 @@ func TestRawExpr(t *testing.T) {
 }
 
 func TestComputationalIndex(t *testing.T) {
+	code := "turnover*4"
+	_, err := indexEvaluator.indexDao.DeleteIndexByCode(code, true)
+	if err != nil {
+		t.Error(err)
+	}
 	index := model.Index{}
-	index.Code = "turnover*4"
-	index.Type = model.Computational
+	index.Code = code
+	index.Type = model.ITComputational
 	index.Expr = "index[turnover*2] * num[2]"
 	json, _, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
@@ -74,16 +79,10 @@ func TestComputationalIndex(t *testing.T) {
 func TestSyntaxErrorExprNoNum(t *testing.T) {
 	index := model.Index{}
 	index.Expr = "index[turnover*2] * 2"
-	json, _, err := InfixToPostExprJson(index.Expr)
+	_, _, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
-		t.Fatal(err)
+		t.Log(err)
 	}
-	index.Serialized = json
-	result, err := indexEvaluator.Eval(&index, 0)
-	if err != nil {
-		t.Error(err)
-	}
-	t.Log(result)
 }
 
 func TestSyntaxErrorExprCapitalNum(t *testing.T) {

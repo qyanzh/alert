@@ -101,7 +101,7 @@ func (e *IndexEvaluator) extractSubIndexValue(indexCode string, roomID, timeRang
 	if err != nil {
 		return 0, err
 	}
-	if index.Type == model.Normal {
+	if index.Type == model.ITNormal {
 		if timeRange == 0 { // 若父指标无时间范围，使用子指标时间范围
 			timeRange = index.TimeRange
 		}
@@ -109,7 +109,7 @@ func (e *IndexEvaluator) extractSubIndexValue(indexCode string, roomID, timeRang
 		if err != nil {
 			return 0, err
 		}
-	} else if index.Type == model.Computational {
+	} else if index.Type == model.ITComputational {
 		subExpr, err := postExprFromJson(index.Serialized)
 		if err != nil {
 			return 0, fmt.Errorf("deserialize index json(IndexCode=%s): %v", indexCode, err)

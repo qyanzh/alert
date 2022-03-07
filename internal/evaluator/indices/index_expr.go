@@ -41,10 +41,10 @@ func InfixToPostExprJson(infix string) ([]byte, model.IndexType, error) {
 		return nil, 0, fmt.Errorf("syntax error: %v", err)
 	}
 	// 判定是否有子指标
-	indexType := model.Normal
+	indexType := model.ITNormal
 	for _, node := range *postExpr {
 		if node.NodeType == code {
-			indexType = model.Computational
+			indexType = model.ITComputational
 			break
 		}
 	}

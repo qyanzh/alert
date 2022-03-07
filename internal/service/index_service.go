@@ -66,7 +66,7 @@ func (is *IndexService) AddIndex(name, code, expr string, timeRange uint) (*mode
 	return &newIndex, nil
 }
 
-func (is *IndexService) SelectRoomIndices(codes []string, roomID uint) (map[string]float64, error) {
+func (is *IndexService) SelectIndexValuesByCodesAndRoomID(codes []string, roomID uint) (map[string]float64, error) {
 	indicesBatch, err := is.indexDao.SelectIndexByCodeBatch(codes)
 	if err != nil {
 		return nil, err

@@ -32,16 +32,16 @@ func (index *Index) String() string {
 type IndexType uint8
 
 const (
-	Normal IndexType = iota
-	Computational
+	ITNormal IndexType = iota + 1
+	ITComputational
 )
 
 func (it *IndexType) String() string {
 	var s string
 	switch *it {
-	case Normal:
+	case ITNormal:
 		s = "普通型"
-	case Computational:
+	case ITComputational:
 		s = "计算型"
 	}
 	return s

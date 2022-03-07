@@ -10,16 +10,16 @@ import (
 	"testing"
 )
 
-var indexDao IndexDao
+var indexDao *IndexDao
 
 func init() {
-	indexDao = *NewIndexDao()
+	indexDao = NewIndexDao()
 }
 
 func TestAddIndex(t *testing.T) {
 	_, _ = indexDao.DeleteIndexByCode("test_index", true)
 	index := model.Index{}
-	index.Type = model.Normal
+	index.Type = model.ITNormal
 	index.Code = "test_index"
 	index.Name = "总营业额"
 	index.Expr = "sum(turnover)"
@@ -32,7 +32,7 @@ func TestAddIndex(t *testing.T) {
 
 func TestAddDuplicateIndex(t *testing.T) {
 	index := model.Index{}
-	index.Type = model.Normal
+	index.Type = model.ITNormal
 	index.Code = "test_index"
 	index.Name = "总营业额"
 	index.Expr = "sum(turnover)"

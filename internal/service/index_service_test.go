@@ -24,7 +24,7 @@ func TestSelectRoomIndices(t *testing.T) {
 	for _, index := range *indexBatch {
 		codes = append(codes, index.Code)
 	}
-	indices, err := indexService.SelectRoomIndices(codes, 0)
+	indices, err := indexService.SelectIndexValuesByCodesAndRoomID(codes, 0)
 	t.Log(indices)
 }
 
