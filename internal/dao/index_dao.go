@@ -20,24 +20,24 @@ func NewIndexDao() *IndexDao {
 	return &IndexDao{db: db.DbClient}
 }
 
-func (dao *IndexDao) AddIndex(index *model.Index) (int64, error) {
-	result := dao.db.Create(index)
+func (id *IndexDao) AddIndex(index *model.Index) (int64, error) {
+	result := id.db.Create(index)
 	if result.Error != nil {
 		return 0, fmt.Errorf("adding index %v: %v", *index, result.Error)
 	}
 	return result.RowsAffected, nil
 }
 
-func (dao *IndexDao) DeleteIndexByID(ID uint) (int64, error) {
-	result := dao.db.Delete(&model.Index{}, ID)
+func (id *IndexDao) DeleteIndexByID(ID uint) (int64, error) {
+	result := id.db.Delete(&model.Index{}, ID)
 	if result.Error != nil {
 		return 0, fmt.Errorf("deleting index by id=%d: %v", ID, result.Error)
 	}
 	return result.RowsAffected, nil
 }
 
-func (dao *IndexDao) DeleteIndexByCode(code string, permanent bool) (int64, error) {
-	where := dao.db.Where("code = ?", code)
+func (id *IndexDao) DeleteIndexByCode(code string, permanent bool) (int64, error) {
+	where := id.db.Where("code = ?", code)
 	if permanent {
 		where = where.Unscoped()
 	}
@@ -48,44 +48,44 @@ func (dao *IndexDao) DeleteIndexByCode(code string, permanent bool) (int64, erro
 	return result.RowsAffected, nil
 }
 
-func (dao *IndexDao) UpdateIndex(index *model.Index) (int64, error) {
-	result := dao.db.Save(index)
+func (id *IndexDao) UpdateIndex(index *model.Index) (int64, error) {
+	result := id.db.Save(index)
 	if result.Error != nil {
 		return 0, fmt.Errorf("updating index %v: %v", *index, result.Error)
 	}
 	return result.RowsAffected, nil
 }
 
-func (dao *IndexDao) SelectIndexByID(ID uint) (*model.Index, error) {
+func (id *IndexDao) SelectIndexByID(ID uint) (*model.Index, error) {
 	index := model.Index{}
-	result := dao.db.First(&index, ID)
+	result := id.db.First(&index, ID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("selecting index by id=%d: %v", ID, result.Error)
 	}
 	return &index, nil
 }
 
-func (dao *IndexDao) SelectIndexByCode(code string) (*model.Index, error) {
+func (id *IndexDao) SelectIndexByCode(code string) (*model.Index, error) {
 	index := model.Index{Code: code}
-	result := dao.db.Where(&index).First(&index)
+	result := id.db.Where(&index).First(&index)
 	if result.Error != nil {
 		return nil, fmt.Errorf("selecting index by code=%s: %v", code, result.Error)
 	}
 	return &index, nil
 }
 
-func (dao *IndexDao) SelectIndexByCodeBatch(codes []string) (*[]model.Index, error) {
+func (id *IndexDao) SelectIndexByCodeBatch(codes []string) (*[]model.Index, error) {
 	indices := make([]model.Index, len(codes))
-	result := dao.db.Where("code IN ?", codes).Find(&indices)
+	result := id.db.Where("code IN ?", codes).Find(&indices)
 	if result.Error != nil {
 		return nil, fmt.Errorf("selecting index by codes=%s: %v", codes, result.Error)
 	}
 	return &indices, nil
 }
 
-func (dao *IndexDao) SelectAllIndices() (*[]model.Index, error) {
+func (id *IndexDao) SelectAllIndices() (*[]model.Index, error) {
 	var indices []model.Index
-	result := dao.db.Find(&indices)
+	result := id.db.Find(&indices)
 	if result.Error != nil {
 		return nil, fmt.Errorf("selecting all indices: %v", result.Error)
 	}

@@ -17,20 +17,20 @@ func NewRuleService() *RuleService {
 	return &RuleService{ruleDao: *dao.NewRuleDao(), indexService: *NewIndexService()}
 }
 
-func (service *RuleService) SelectRule(code string) (*model.Rule, error) {
-	return service.ruleDao.SelectRuleByCode(code)
+func (rs *RuleService) SelectRule(code string) (*model.Rule, error) {
+	return rs.ruleDao.SelectRuleByCode(code)
 }
 
-func (service *RuleService) SelectAllRules() (*[]model.Rule, error) {
-	return service.ruleDao.SelectAllRules()
+func (rs *RuleService) SelectAllRules() (*[]model.Rule, error) {
+	return rs.ruleDao.SelectAllRules()
 }
 
-func (service *RuleService) SelectRuleById(id uint) (*model.Rule, error) {
-	return service.ruleDao.SelectRuleByID(id)
+func (rs *RuleService) SelectRuleById(id uint) (*model.Rule, error) {
+	return rs.ruleDao.SelectRuleByID(id)
 }
 
 //ruleType 为true是normalrule
-func (service *RuleService) AddRule(roomId uint, name string, code string, ruleType bool, content string) (*model.Rule, error) {
+func (rs *RuleService) AddRule(roomId uint, name string, code string, ruleType bool, content string) (*model.Rule, error) {
 	rule := model.Rule{
 		Code:   code,
 		Name:   name,
@@ -52,24 +52,24 @@ func (service *RuleService) AddRule(roomId uint, name string, code string, ruleT
 			return nil, err
 		}
 	}
-	_, err := service.ruleDao.AddRule(&rule)
+	_, err := rs.ruleDao.AddRule(&rule)
 	if err != nil {
 		return &rule, err
 	}
-	return service.ruleDao.SelectRuleByCode(code)
+	return rs.ruleDao.SelectRuleByCode(code)
 }
 
-func (service *RuleService) DeleteRule(code string) error {
-	_, err := service.ruleDao.DeleteRuleByCode(code)
+func (rs *RuleService) DeleteRule(code string) error {
+	_, err := rs.ruleDao.DeleteRuleByCode(code)
 	return err
 }
 
-func (service *RuleService) UpdateRule(rule model.Rule) error {
-	_, err := service.ruleDao.UpdateRule(&rule)
+func (rs *RuleService) UpdateRule(rule model.Rule) error {
+	_, err := rs.ruleDao.UpdateRule(&rule)
 	return err
 }
 
-func (service *RuleService) checkANum(index float64, op string, num float64) (bool, error) {
+func (rs *RuleService) checkANum(index float64, op string, num float64) (bool, error) {
 	switch op {
 	case "=":
 		return math.Abs(index-num) < 1e-8, nil
@@ -88,10 +88,10 @@ func (service *RuleService) checkANum(index float64, op string, num float64) (bo
 	}
 }
 
-func (service *RuleService) checkNormalRule(normalRule *rules.NormalRule, roomId uint) (bool, error) {
+func (rs *RuleService) checkNormalRule(normalRule *rules.NormalRule, roomId uint) (bool, error) {
 	//indexnum:=
 	indexNum := 0.0
-	return service.checkANum(indexNum, normalRule.Op, normalRule.Number)
+	return rs.checkANum(indexNum, normalRule.Op, normalRule.Number)
 }
 
 type boolStack []bool
@@ -105,18 +105,21 @@ func (s *boolStack) Push(num bool) {
 func (s *boolStack) Pop() {
 	*s = (*s)[:len(*s)-1]
 }
-func (service *RuleService) getRuleById(ruleId uint) (*model.Rule, error) {
-	return service.ruleDao.SelectRuleByID(ruleId)
+func (rs *RuleService) getRuleById(ruleId uint) (*model.Rule, error) {
+	return rs.ruleDao.SelectRuleByID(ruleId)
 }
 
-func (service *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap map[uint]*model.Rule, ids *[]uint) error {
+func (rs *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap map[uint]*model.Rule, ids *[]uint) error {
 	var err error
 	for _, value := range *completeRule {
 		if value.Type == rules.RULENODE {
-			ruleId, _ := value.Content.(uint)
+			ruleId, ok := value.Content.(uint)
+			if !ok {
+				return errors.New("id转换uint出错")
+			}
 			rule, ok := ruleMap[ruleId]
 			if !ok {
-				rule, err = service.getRuleById(ruleId)
+				rule, err = rs.getRuleById(ruleId)
 				if err != nil {
 					return err
 				}
@@ -125,7 +128,7 @@ func (service *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap 
 			if rule.Type == model.NORMALRULE {
 				*ids = append(*ids, rules.GetNormalRule(rule.Serialized).IndexId)
 			} else {
-				err = service.getAllNum(rules.GetCompleteRule(rule.Serialized), ruleMap, ids)
+				err = rs.getAllNum(rules.GetCompleteRule(rule.Serialized), ruleMap, ids)
 				if err != nil {
 					return err
 				}
@@ -135,7 +138,7 @@ func (service *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap 
 	return nil
 }
 
-func (service *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap map[uint]float64, ruleMap map[uint]*model.Rule) (bool, error) {
+func (rs *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap map[uint]float64, ruleMap map[uint]*model.Rule) (bool, error) {
 	s := make(boolStack, 0)
 	var err error
 	for _, value := range *completeRule {
@@ -144,13 +147,13 @@ func (service *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexM
 			var r bool
 			if rule.Type == model.NORMALRULE {
 				normalRule := rules.GetNormalRule(rule.Serialized)
-				r, err = service.checkANum(indexMap[rule.Id], normalRule.Op, normalRule.Number)
+				r, err = rs.checkANum(indexMap[rule.Id], normalRule.Op, normalRule.Number)
 				if err != nil {
 					return false, err
 				}
 			} else {
 				completeRule := rules.GetCompleteRule(rule.Serialized)
-				r, err = service.checkAllNum(completeRule, indexMap, ruleMap)
+				r, err = rs.checkAllNum(completeRule, indexMap, ruleMap)
 				if err != nil {
 					return false, err
 				}
@@ -182,38 +185,38 @@ func (service *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexM
 	return s.Top(), nil
 }
 
-func (service *RuleService) checkCompleteRule(completeRule *rules.CompleteRule, roomId uint) (bool, error) {
+func (rs *RuleService) checkCompleteRule(completeRule *rules.CompleteRule, roomId uint) (bool, error) {
 
 	ids := make([]uint, 0)
 	ruleMap := make(map[uint]*model.Rule, 0)
-	err := service.getAllNum(completeRule, ruleMap, &ids)
+	err := rs.getAllNum(completeRule, ruleMap, &ids)
 	if err != nil {
 		return false, err
 	}
 	indexMap := make(map[uint]float64, 0)
-	return service.checkAllNum(completeRule, indexMap, ruleMap)
+	return rs.checkAllNum(completeRule, indexMap, ruleMap)
 }
 
-func (service *RuleService) CheckRule(code string) (bool, error) {
-	rule, err := service.SelectRule(code)
+func (rs *RuleService) CheckRule(code string) (bool, error) {
+	rule, err := rs.SelectRule(code)
 	if err != nil {
 		return false, err
 	}
 	if rule.Type == model.NORMALRULE {
-		return service.checkNormalRule(rules.GetNormalRule(rule.Serialized), rule.RoomId)
+		return rs.checkNormalRule(rules.GetNormalRule(rule.Serialized), rule.RoomId)
 	} else {
-		return service.checkCompleteRule(rules.GetCompleteRule(rule.Serialized), rule.RoomId)
+		return rs.checkCompleteRule(rules.GetCompleteRule(rule.Serialized), rule.RoomId)
 	}
 }
 
-func (service *RuleService) CheckRuleWithId(id uint) (bool, error) {
-	rule, err := service.SelectRuleById(id)
+func (rs *RuleService) CheckRuleWithId(id uint) (bool, error) {
+	rule, err := rs.SelectRuleById(id)
 	if err != nil {
 		return false, nil
 	}
 	if rule.Type == model.NORMALRULE {
-		return service.checkNormalRule(rules.GetNormalRule(rule.Serialized), rule.RoomId)
+		return rs.checkNormalRule(rules.GetNormalRule(rule.Serialized), rule.RoomId)
 	} else {
-		return service.checkCompleteRule(rules.GetCompleteRule(rule.Serialized), rule.RoomId)
+		return rs.checkCompleteRule(rules.GetCompleteRule(rule.Serialized), rule.RoomId)
 	}
 }

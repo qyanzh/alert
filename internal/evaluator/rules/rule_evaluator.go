@@ -164,7 +164,10 @@ func ToNormalRuleExpr(expr string) (NormalRuleNode, error) {
 	if nowType != NUMTYPE {
 		return node, errors.New("语法错误")
 	}
-	node.Number, _ = strconv.ParseFloat(expr[st:ed], 64)
+	node.Number, err = strconv.ParseFloat(expr[st:ed], 64)
+	if err != nil {
+		return node, err
+	}
 	return node, nil
 }
 

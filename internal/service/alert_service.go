@@ -14,12 +14,12 @@ func NewAlertService() *AlertService {
 	return &AlertService{alertDao: *dao.NewAlertDao()}
 }
 
-func (service *AlertService) AddAlert(ruleId uint, t time.Time) error {
+func (as *AlertService) AddAlert(ruleId uint, t time.Time) error {
 	alert := model.Alert{RuleId: ruleId, Time: t}
-	_, err := service.alertDao.AddAlert(&alert)
+	_, err := as.alertDao.AddAlert(&alert)
 	return err
 }
 
-func (service *AlertService) SelectAlert(ruleId uint, startTime time.Time, endTime time.Time) (*[]model.Alert, error) {
-	return service.alertDao.SelectAlertByOther(ruleId, startTime, endTime)
+func (as *AlertService) SelectAlert(ruleId uint, startTime time.Time, endTime time.Time) (*[]model.Alert, error) {
+	return as.alertDao.SelectAlertByOther(ruleId, startTime, endTime)
 }

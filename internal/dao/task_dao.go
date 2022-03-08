@@ -21,24 +21,24 @@ func NewTaskDao() *TaskDao {
 	return &TaskDao{db: db.DbClient}
 }
 
-func (dao *TaskDao) AddTask(task *model.Task) (int64, error) {
-	result := dao.db.Create(task)
+func (td *TaskDao) AddTask(task *model.Task) (int64, error) {
+	result := td.db.Create(task)
 	if result.Error != nil {
 		return 0, fmt.Errorf("adding task %v: %v", *task, result.Error)
 	}
 	return result.RowsAffected, nil
 }
 
-func (dao *TaskDao) DeleteTaskByID(ID uint) (int64, error) {
-	result := dao.db.Delete(&model.Task{}, ID)
+func (td *TaskDao) DeleteTaskByID(ID uint) (int64, error) {
+	result := td.db.Delete(&model.Task{}, ID)
 	if result.Error != nil {
 		return 0, fmt.Errorf("deleting task by id=%d: %v", ID, result.Error)
 	}
 	return result.RowsAffected, nil
 }
 
-func (dao *TaskDao) DeleteTaskByCode(code string, permanent bool) (int64, error) {
-	where := dao.db.Where("code = ?", code)
+func (td *TaskDao) DeleteTaskByCode(code string, permanent bool) (int64, error) {
+	where := td.db.Where("code = ?", code)
 	if permanent {
 		where = where.Unscoped()
 	}
@@ -49,28 +49,28 @@ func (dao *TaskDao) DeleteTaskByCode(code string, permanent bool) (int64, error)
 	return result.RowsAffected, nil
 }
 
-func (dao *TaskDao) UpdateTask(task *model.Task) (int64, error) {
-	result := dao.db.Save(task)
+func (td *TaskDao) UpdateTask(task *model.Task) (int64, error) {
+	result := td.db.Save(task)
 	if result.Error != nil {
 		return 0, fmt.Errorf("updating task %v: %v", *task, result.Error)
 	}
 	return result.RowsAffected, nil
 }
 
-func (dao *TaskDao) UpdateTaskEnableByCode(code string, enable bool) (int64, error) {
+func (td *TaskDao) UpdateTaskEnableByCode(code string, enable bool) (int64, error) {
 	task := model.Task{Enable: enable}
-	result := dao.db.Model(&task).Select("enable").Where("code = ?", code).Updates(task)
+	result := td.db.Model(&task).Select("enable").Where("code = ?", code).Updates(task)
 	if result.Error != nil {
 		return 0, fmt.Errorf("updating task enable: %v", result.Error)
 	}
 	return result.RowsAffected, result.Error
 }
 
-func (dao *TaskDao) UpdateTaskStatusByCode(code string, status model.TaskStatus, nextTime *time.Time, msg string) (int64, error) {
-	return dao.UpdateTaskStatusByCodes(&[]string{code}, status, nextTime, msg)
+func (td *TaskDao) UpdateTaskStatusByCode(code string, status model.TaskStatus, nextTime *time.Time, msg string) (int64, error) {
+	return td.UpdateTaskStatusByCodes(&[]string{code}, status, nextTime, msg)
 }
 
-func (dao *TaskDao) UpdateTaskStatusByCodes(codes *[]string, status model.TaskStatus, nextTime *time.Time, msg string) (int64, error) {
+func (td *TaskDao) UpdateTaskStatusByCodes(codes *[]string, status model.TaskStatus, nextTime *time.Time, msg string) (int64, error) {
 	task := model.Task{Status: status}
 	if nextTime != nil {
 		task.NextTime = *nextTime
@@ -78,34 +78,34 @@ func (dao *TaskDao) UpdateTaskStatusByCodes(codes *[]string, status model.TaskSt
 	if msg != "" {
 		task.Msg = msg
 	}
-	result := dao.db.Model(&task).Where("code IN ?", *codes).Updates(&task)
+	result := td.db.Model(&task).Where("code IN ?", *codes).Updates(&task)
 	if result.Error != nil {
 		return 0, fmt.Errorf("updating task status: %v", result.Error)
 	}
 	return result.RowsAffected, result.Error
 }
 
-func (dao *TaskDao) SelectTaskByID(ID uint) (*model.Task, error) {
+func (td *TaskDao) SelectTaskByID(ID uint) (*model.Task, error) {
 	task := model.Task{}
-	result := dao.db.First(&task, ID)
+	result := td.db.First(&task, ID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("selecting task by id=%d: %v", ID, result.Error)
 	}
 	return &task, nil
 }
 
-func (dao *TaskDao) SelectTaskByCode(code string) (*model.Task, error) {
+func (td *TaskDao) SelectTaskByCode(code string) (*model.Task, error) {
 	task := model.Task{Code: code}
-	result := dao.db.Where(&task).First(&task)
+	result := td.db.Where(&task).First(&task)
 	if result.Error != nil {
 		return nil, fmt.Errorf("selecting task by code=%s: %v", code, result.Error)
 	}
 	return &task, nil
 }
 
-func (dao *TaskDao) SelectRunnableTasks() (*[]model.Task, error) {
+func (td *TaskDao) SelectRunnableTasks() (*[]model.Task, error) {
 	var tasks []model.Task
-	result := dao.db.
+	result := td.db.
 		Where("enable = ? AND status = ? AND next_time <= ?",
 			true, model.TSReady, time.Now()).
 		Find(&tasks)
