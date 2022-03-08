@@ -59,23 +59,23 @@ func (ts *TaskService) UpdateTaskEnableByCode(code string, enable bool) error {
 }
 
 func (ts *TaskService) UpdateTaskSuccessByCode(code string, nextTime *time.Time) error {
-	_, err := ts.taskDao.UpdateTaskStatusAndNextTimeByCode(code, model.TSReady, nextTime)
+	_, err := ts.taskDao.UpdateTaskStatusByCode(code, model.TSReady, nextTime, "success")
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ts *TaskService) UpdateTaskStatusRunningByCodes(codes *[]string) error {
-	_, err := ts.taskDao.UpdateTaskStatusByCodes(codes, model.TSRunning)
+func (ts *TaskService) UpdateTaskStatusRunningByCode(code string) error {
+	_, err := ts.taskDao.UpdateTaskStatusByCode(code, model.TSRunning, nil, "running")
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ts *TaskService) UpdateTaskFailByCode(code string) error {
-	_, err := ts.taskDao.UpdateTaskStatusAndNextTimeByCode(code, model.TSFail, nil)
+func (ts *TaskService) UpdateTaskFailByCode(code, msg string) error {
+	_, err := ts.taskDao.UpdateTaskStatusByCode(code, model.TSFail, nil, msg)
 	if err != nil {
 		return err
 	}

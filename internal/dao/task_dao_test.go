@@ -51,7 +51,7 @@ func TestTaskDao_UpdateTaskStatusByCodes(t *testing.T) {
 		"test_task2",
 		"test_task3",
 	}
-	_, err := taskDao.UpdateTaskStatusByCodes(&codes, model.TSReady)
+	_, err := taskDao.UpdateTaskStatusByCodes(&codes, model.TSReady, nil, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -68,7 +68,7 @@ func TestTaskDao_UpdateTaskEnablesByCode(t *testing.T) {
 func TestTaskDao_UpdateTaskStatusAndNextTimeByCode(t *testing.T) {
 	code := "test_task"
 	nextTime := time.Now().Add(time.Hour)
-	_, err := taskDao.UpdateTaskStatusAndNextTimeByCode(code, model.TSReady, &nextTime)
+	_, err := taskDao.UpdateTaskStatusByCodes(&[]string{code}, model.TSReady, &nextTime, "test")
 	if err != nil {
 		t.Error(err)
 	}

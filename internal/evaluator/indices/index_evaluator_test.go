@@ -8,6 +8,7 @@ package indices
 import (
 	"alert/internal/dao"
 	"alert/internal/model"
+	"fmt"
 	"testing"
 )
 
@@ -91,8 +92,8 @@ func TestSyntaxErrorExprCapitalNum(t *testing.T) {
 	pe, err := infixToPostExpr(index.Expr)
 	t.Log(pe)
 	json, _, err := InfixToPostExprJson(index.Expr)
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Error(fmt.Errorf("syntax error not detected: %s", index.Expr))
 	}
 	index.Serialized = json
 	result, err := indexEvaluator.Eval(&index, 0)

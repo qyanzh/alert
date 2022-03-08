@@ -7,7 +7,7 @@ package gpool
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"sync"
 )
 
@@ -50,17 +50,17 @@ func (gp *GPool) newGoroutine(work func()) {
 	gp.total++
 	gp.countLock.Unlock()
 	go func(gid uint) {
-		fmt.Printf("created a new goroutine, gid=%d\n", gid)
+		log.Printf("created a new goroutine, gid=%d\n", gid)
 		this := mGoroutine{gid: gid, works: make(chan func(), 1)}
 		this.works <- work
 		for {
 			select {
 			case w := <-this.works:
-				fmt.Printf("gid=%d received a work.\n", this.gid)
+				log.Printf("gid=%d received a work.\n", this.gid)
 				w()
 				gp.goroutines <- this
 			case <-gp.done:
-				fmt.Printf("goroutine terminated, gid=%d\n", this.gid)
+				log.Printf("goroutine terminated, gid=%d\n", this.gid)
 				return
 			}
 		}
@@ -84,7 +84,7 @@ func (gp *GPool) Close() error {
 		}
 	}
 	close(gp.goroutines)
-	fmt.Printf("GPool closed, %d goroutines in total.\n", gp.total)
+	log.Printf("GPool closed, %d goroutines in total.\n", gp.total)
 	return nil
 }
 

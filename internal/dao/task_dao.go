@@ -66,25 +66,23 @@ func (dao *TaskDao) UpdateTaskEnableByCode(code string, enable bool) (int64, err
 	return result.RowsAffected, result.Error
 }
 
-func (dao *TaskDao) UpdateTaskStatusByCodes(codes *[]string, status model.TaskStatus) (int64, error) {
-	task := model.Task{Status: status}
-	result := dao.db.Model(&task).Select("status").Where("code IN ?", *codes).Updates(&task)
-	if result.Error != nil {
-		return 0, fmt.Errorf("updating task status: %v", result.Error)
-	}
-	return result.RowsAffected, result.Error
+func (dao *TaskDao) UpdateTaskStatusByCode(code string, status model.TaskStatus, nextTime *time.Time, msg string) (int64, error) {
+	return dao.UpdateTaskStatusByCodes(&[]string{code}, status, nextTime, msg)
 }
 
-func (dao *TaskDao) UpdateTaskStatusAndNextTimeByCode(code string, status model.TaskStatus, nextTime *time.Time) (int64, error) {
+func (dao *TaskDao) UpdateTaskStatusByCodes(codes *[]string, status model.TaskStatus, nextTime *time.Time, msg string) (int64, error) {
 	task := model.Task{Status: status}
 	if nextTime != nil {
 		task.NextTime = *nextTime
 	}
-	result := dao.db.Model(&task).Where("code = ?", code).Updates(&task)
-	if result.Error != nil {
-		return 0, fmt.Errorf("updating task(code=%s): %v", code, result.Error)
+	if msg != "" {
+		task.Msg = msg
 	}
-	return result.RowsAffected, nil
+	result := dao.db.Model(&task).Where("code IN ?", *codes).Updates(&task)
+	if result.Error != nil {
+		return 0, fmt.Errorf("updating task status: %v", result.Error)
+	}
+	return result.RowsAffected, result.Error
 }
 
 func (dao *TaskDao) SelectTaskByID(ID uint) (*model.Task, error) {

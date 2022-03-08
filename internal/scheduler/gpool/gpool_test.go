@@ -7,6 +7,7 @@ package gpool
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -18,7 +19,7 @@ func TestGPool(t *testing.T) {
 	// 指定时间跳出for循环
 	done := make(chan struct{})
 	go func() {
-		time.Sleep(3 * time.Second)
+		time.Sleep(30 * time.Second)
 		close(done)
 	}()
 
@@ -39,7 +40,7 @@ func TestGPool(t *testing.T) {
 				fmt.Println(wid + time.Now().String())
 			})
 			// 间隔一段时间发送一个任务
-			time.Sleep(time.Millisecond * 10)
+			time.Sleep(time.Millisecond * time.Duration(10*rand.Intn(100)))
 		}
 	}
 }
