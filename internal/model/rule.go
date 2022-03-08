@@ -21,6 +21,6 @@ type Rule struct {
 type RuleType uint8
 
 const (
-	Complex_Rule RuleType = iota
-	Normal_Rule
+	COMPLEXRULE RuleType = iota
+	NORMALRULE
 )

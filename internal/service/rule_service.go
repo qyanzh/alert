@@ -29,13 +29,18 @@ func (service *RuleService) SelectRuleById(id uint) (*model.Rule, error) {
 
 //ruleType 为true是normalrule
 func (service *RuleService) AddRule(roomId uint, name string, code string, ruleType bool, content string) (*model.Rule, error) {
-	rule := model.Rule{Code: code, Name: name, RoomId: roomId, Expr: content}
+	rule := model.Rule{
+		Code:   code,
+		Name:   name,
+		RoomId: roomId,
+		Expr:   content,
+	}
 	if ruleType {
-		rule.Type = model.Normal_Rule
+		rule.Type = model.NORMALRULE
 		ruleNode, _ := evaluator.ToNormalRuleExpr(rule.Expr)
 		rule.Serialized = ruleNode.ToJson()
 	} else {
-		rule.Type = model.Complex_Rule
+		rule.Type = model.COMPLEXRULE
 		ruleNode, _ := evaluator.ToCompleteRuleExpr(rule.Expr)
 		rule.Serialized = ruleNode.ToJson()
 	}
@@ -78,7 +83,7 @@ func (service *RuleService) getRuleById(ruleId uint) (*model.Rule, error) {
 func (service *RuleService) checkCompleteRule(completeRule *evaluator.CompleteRule, roomId uint) (bool, error) {
 	s := make(boolStack, 0)
 	for _, value := range *completeRule {
-		if value.Type == evaluator.RuleNode {
+		if value.Type == evaluator.RULENODE {
 			rule, err := service.getRuleById(value.Content.(uint))
 			if err != nil {
 				return false, err
@@ -88,7 +93,7 @@ func (service *RuleService) checkCompleteRule(completeRule *evaluator.CompleteRu
 				return false, err
 			}
 			s.Push(r)
-		} else if value.Type == evaluator.RuleOp {
+		} else if value.Type == evaluator.RULEOP {
 			if len(s) < 2 {
 				return false, errors.New("请检查语法")
 			}
@@ -119,7 +124,19 @@ func (service *RuleService) CheckRule(code string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if rule.Type == model.Normal_Rule {
+	if rule.Type == model.NORMALRULE {
+		return service.checkNormalRule(evaluator.GetNormalRule(rule.Serialized), rule.RoomId)
+	} else {
+		return service.checkCompleteRule(evaluator.GetCompleteRule(rule.Serialized), rule.RoomId)
+	}
+}
+
+func (service *RuleService) CheckRuleWithId(id uint) (bool, error) {
+	rule, err := service.SelectRuleById(id)
+	if err != nil {
+		return false, nil
+	}
+	if rule.Type == model.NORMALRULE {
 		return service.checkNormalRule(evaluator.GetNormalRule(rule.Serialized), rule.RoomId)
 	} else {
 		return service.checkCompleteRule(evaluator.GetCompleteRule(rule.Serialized), rule.RoomId)

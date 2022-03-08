@@ -26,9 +26,9 @@ type NormalRuleNode struct {
 type CompleteType int8
 
 const (
-	RuleOp CompleteType = iota
-	RuleNumber
-	RuleNode
+	RULEOP CompleteType = iota
+	RULENUMBER
+	RULENODE
 )
 
 type CompleteNode struct {
@@ -37,13 +37,13 @@ type CompleteNode struct {
 }
 
 func (r *CompleteNode) PrintContent() {
-	if r.Type == RuleNode {
+	if r.Type == RULENODE {
 		x, _ := r.Content.(uint)
 		print(x)
-	} else if r.Type == RuleOp {
+	} else if r.Type == RULEOP {
 		x, _ := r.Content.(rune)
 		fmt.Printf("%c", x)
-	} else if r.Type == RuleNumber {
+	} else if r.Type == RULENUMBER {
 		x, _ := r.Content.(float64)
 		print(x)
 	}
@@ -97,18 +97,18 @@ func isCompareOp(c uint8) bool {
 type strType uint8
 
 const (
-	codeType strType = iota
-	opType
-	numType
-	other
+	CODETYPE strType = iota
+	OPTYPE
+	NUMTYPE
+	OTHER
 )
 
 func getNext(expr string, nowst int, isSingleOp bool) (st int, ed int, nowType strType) {
-	nowType = other
+	nowType = OTHER
 	for st = nowst; st < len(expr); st++ {
 		if expr[st] == '[' {
 			st++
-			nowType = codeType
+			nowType = CODETYPE
 			for ed = st; ed < len(expr); ed++ {
 				if expr[ed] == ']' {
 					break
@@ -117,7 +117,7 @@ func getNext(expr string, nowst int, isSingleOp bool) (st int, ed int, nowType s
 			break
 		}
 		if expr[st] <= '9' && expr[st] >= '0' {
-			nowType = numType
+			nowType = NUMTYPE
 			for ed = st; ed < len(expr); ed++ {
 				if expr[st] > '9' || expr[st] < '0' {
 					break
@@ -127,7 +127,7 @@ func getNext(expr string, nowst int, isSingleOp bool) (st int, ed int, nowType s
 			break
 		}
 		if isCompareOp(expr[st]) {
-			nowType = opType
+			nowType = OPTYPE
 			if isSingleOp {
 				ed = st + 1
 				break
@@ -147,17 +147,21 @@ func getNext(expr string, nowst int, isSingleOp bool) (st int, ed int, nowType s
 func ToNormalRuleExpr(expr string) (NormalRuleNode, error) {
 	node := NormalRuleNode{}
 	st, ed, nowType := getNext(expr, 0, false)
-	if nowType != codeType {
+	if nowType != CODETYPE {
 		return node, errors.New("语法错误")
 	}
-	node.IndexId = indexDao.SelectIndexByCode(expr[st:ed]).ID
+	index, err := indexDao.SelectIndexByCode(expr[st:ed])
+	if err != nil {
+		return node, err
+	}
+	node.IndexId = index.ID
 	st, ed, nowType = getNext(expr, ed, false)
-	if nowType != opType {
+	if nowType != OPTYPE {
 		return node, errors.New("语法错误")
 	}
 	node.Op = expr[st:ed]
 	st, ed, nowType = getNext(expr, ed, false)
-	if nowType != numType {
+	if nowType != NUMTYPE {
 		return node, errors.New("语法错误")
 	}
 	node.Number, _ = strconv.ParseFloat(expr[st:ed], 64)
@@ -190,21 +194,21 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 		if st >= len(expr) {
 			break
 		}
-		if nowType == codeType {
+		if nowType == CODETYPE {
 			index, err := ruleDao.SelectRuleByCode(expr[st:ed])
 			if err != nil {
 				return &nodes, err
 			}
-			nodes = append(nodes, CompleteNode{Type: RuleNode, Content: index.Id})
-		} else if nowType == numType {
+			nodes = append(nodes, CompleteNode{Type: RULENODE, Content: index.Id})
+		} else if nowType == NUMTYPE {
 			return &nodes, errors.New("请检查语法")
-		} else if nowType == opType {
+		} else if nowType == OPTYPE {
 			r := rune(expr[st])
 			if isLogicOp(r) {
 				// 弹出栈中优先级>=当前运算符的运算符
 				for top := opStack.peek(); top != 0 && top != '(' && logicOpGE(top, r); top = opStack.peek() {
 					opStack, _ = opStack.pop()
-					nodes = append(nodes, CompleteNode{Type: RuleOp, Content: top})
+					nodes = append(nodes, CompleteNode{Type: RULEOP, Content: top})
 				}
 				opStack = opStack.push(r)
 			} else if expr[st] == '(' {
@@ -214,7 +218,7 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 				for top := opStack.peek(); top != 0; top = opStack.peek() {
 					opStack, _ = opStack.pop()
 					if top != '(' {
-						nodes = append(nodes, CompleteNode{Type: RuleOp, Content: top})
+						nodes = append(nodes, CompleteNode{Type: RULEOP, Content: top})
 					} else {
 						break
 					}
@@ -226,7 +230,7 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 	}
 	for top := opStack.peek(); top != 0; top = opStack.peek() {
 		opStack, _ = opStack.pop()
-		nodes = append(nodes, CompleteNode{Type: RuleOp, Content: top})
+		nodes = append(nodes, CompleteNode{Type: RULEOP, Content: top})
 	}
 	return &nodes, nil
 }

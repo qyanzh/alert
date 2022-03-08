@@ -12,7 +12,9 @@ type RuleDao struct {
 }
 
 func NewRuleDao() *RuleDao {
-	return &RuleDao{db: db.DbClient}
+	return &RuleDao{
+		db: db.DbClient,
+	}
 }
 
 func (dao *RuleDao) AddRule(rule *model.Rule) (int64, error) {
@@ -51,7 +53,9 @@ func (dao *RuleDao) SelectRuleByID(ID uint) (*model.Rule, error) {
 }
 
 func (dao *RuleDao) SelectRuleByCode(code string) (*model.Rule, error) {
-	rule := model.Rule{Code: code}
+	rule := model.Rule{
+		Code: code,
+	}
 	result := dao.db.Where(&rule).First(&rule)
 	return &rule, result.Error
 }
