@@ -1,4 +1,4 @@
-package evaluator
+package rules
 
 import (
 	"alert/internal/dao"
@@ -196,8 +196,8 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 		}
 		if nowType == CODETYPE {
 			index, err := ruleDao.SelectRuleByCode(expr[st:ed])
-			if err != nil {
-				return &nodes, err
+			if err != nil || index.Id == 0 {
+				return &nodes, errors.New("数据库搜索错误")
 			}
 			nodes = append(nodes, CompleteNode{Type: RULENODE, Content: index.Id})
 		} else if nowType == NUMTYPE {

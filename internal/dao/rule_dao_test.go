@@ -1,16 +1,15 @@
-package rule
+package dao
 
 import (
-	"alert/internal/dao"
-	"alert/internal/evaluator"
+	"alert/internal/evaluator/rules"
 	"alert/internal/model"
 	"testing"
 )
 
-var ruleDao dao.RuleDao
+var ruleDao RuleDao
 
 func init() {
-	ruleDao = *dao.NewRuleDao()
+	ruleDao = *NewRuleDao()
 }
 
 func TestAddNormalRule(t *testing.T) {
@@ -20,9 +19,12 @@ func TestAddNormalRule(t *testing.T) {
 	rule.RoomId = 13
 	rule.Type = model.NORMALRULE
 	rule.Expr = "index[half of turnover recent 3 min] >= 20"
-	ruleNode, _ := evaluator.ToNormalRuleExpr(rule.Expr)
+	ruleNode, _ := rules.ToNormalRuleExpr(rule.Expr)
 	rule.Serialized = ruleNode.ToJson()
-	ruleDao.AddRule(&rule)
+	_, err := ruleDao.AddRule(&rule)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
 	rule = model.Rule{}
 	rule.Code = "turnover equal 200"
@@ -30,9 +32,12 @@ func TestAddNormalRule(t *testing.T) {
 	rule.RoomId = 13
 	rule.Type = model.NORMALRULE
 	rule.Expr = "index[turnover] = 200"
-	ruleNode, _ = evaluator.ToNormalRuleExpr(rule.Expr)
+	ruleNode, _ = rules.ToNormalRuleExpr(rule.Expr)
 	rule.Serialized = ruleNode.ToJson()
-	ruleDao.AddRule(&rule)
+	_, err = ruleDao.AddRule(&rule)
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 func TestAddCompleteRule(t *testing.T) {
 	rule := model.Rule{}
@@ -41,20 +46,29 @@ func TestAddCompleteRule(t *testing.T) {
 	rule.RoomId = 18
 	rule.Type = model.COMPLEXRULE
 	rule.Expr = "rule[for 13 room half of turnover recent 3 min can/'t under 20]|rule[turnover equal 200]"
-	completeRule, _ := evaluator.ToCompleteRuleExpr(rule.Expr)
+	completeRule, _ := rules.ToCompleteRuleExpr(rule.Expr)
 	rule.Serialized = completeRule.ToJson()
 	_, err := ruleDao.AddRule(&rule)
 	if err != nil {
-		print(err.Error())
+		t.Error(err.Error())
 	}
 }
 func TestDeleteRule(t *testing.T) {
-	ruleDao.DeleteRuleByID(3)
+	_, err := ruleDao.DeleteRuleByID(3)
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 func TestDeleteRuleByCode(t *testing.T) {
-	ruleDao.DeleteRuleByCode("for 13 room half of turnover recent 3 min can/'t under 20 or equal 200")
+	_, err := ruleDao.DeleteRuleByCode("for 13 room half of turnover recent 3 min can/'t under 20 or equal 200")
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 func TestSelectRule(t *testing.T) {
-	rule, _ := ruleDao.SelectRuleByID(3)
+	rule, err := ruleDao.SelectRuleByID(3)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	print(rule.Code)
 }

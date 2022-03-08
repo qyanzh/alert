@@ -1,14 +1,13 @@
-package rule
+package service
 
 import (
-	"alert/internal/service"
 	"testing"
 )
 
-var ruleServcie service.RuleService
+var ruleServcie RuleService
 
 func init() {
-	ruleServcie = *service.NewRuleService()
+	ruleServcie = *NewRuleService()
 }
 
 func TestAddRule(t *testing.T) {
@@ -29,7 +28,13 @@ func TestAddRule(t *testing.T) {
 	ruleStr = "rule[test0]^rule[test2]"
 	ruleServcie.AddRule(0, "测试3", "test3", false, ruleStr) //T
 }
-
+func TestAddRuleFault(t *testing.T) {
+	ruleStr := "rule[test4]|rule[test3]"
+	_, err := ruleServcie.AddRule(0, "测试4", "test4", false, ruleStr)
+	if err == nil {
+		t.Error("未捕获错误")
+	}
+}
 func TestCheckRule(t *testing.T) {
 	var i uint
 	want := []bool{true, true, true, false, false, true, false, false, true, true}
