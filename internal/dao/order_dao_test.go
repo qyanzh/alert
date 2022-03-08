@@ -3,20 +3,19 @@
  * @create  2022/02/26 21:38
  */
 
-package order
+package dao
 
 import (
-	"alert/internal/dao"
 	"alert/internal/model"
 	"fmt"
 	"testing"
 	"time"
 )
 
-var orderDao dao.OrderDao
+var orderDao OrderDao
 
 func init() {
-	orderDao = *dao.NewOrderDao()
+	orderDao = *NewOrderDao()
 }
 
 func TestAddOrder(t *testing.T) {
