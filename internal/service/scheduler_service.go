@@ -87,10 +87,7 @@ func (ss *SchedulerService) doCheckTaskRule(task model.Task) error {
 	if err := ss.taskService.UpdateTaskStatusRunningByCode(task.Code); err != nil {
 		return err
 	}
-
-	rule, _ := ss.ruleService.SelectRuleById(task.RuleID)
-	// TODO 换成CheckRuleByID
-	isSatisfy, err := ss.ruleService.CheckRule(rule.Code)
+	isSatisfy, err := ss.ruleService.CheckRuleWithId(task.RuleID)
 	if err != nil {
 		if err := ss.taskService.UpdateTaskFailByCode(task.Code, err.Error()); err != nil {
 			return err
