@@ -37,7 +37,7 @@ func (is *IndexService) SelectAllIndices() (*[]model.Index, error) {
 }
 
 func (is *IndexService) DeleteIndex(code string) error {
-	_, err := is.indexDao.DeleteIndexByCode(code, false)
+	_, err := is.indexDao.DeleteIndexByCode(code)
 	return err
 }
 
@@ -67,14 +67,27 @@ func (is *IndexService) AddIndex(name, code, expr string, timeRange uint) (*mode
 }
 
 func (is *IndexService) SelectIndexValuesByCodesAndRoomID(codes []string, roomID uint) (map[string]float64, error) {
-	indicesBatch, err := is.indexDao.SelectIndexByCodeBatch(codes)
+	indicesBatch, err := is.indexDao.SelectIndexByCodes(codes)
 	if err != nil {
 		return nil, err
 	}
+	return is.selectIndexValuesByRoomID(indicesBatch, roomID)
+}
+
+func (is *IndexService) SelectIndexValuesByIDsAndRoomID(ids []uint, roomID uint) (map[string]float64, error) {
+	indicesBatch, err := is.indexDao.SelectIndexByIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+	return is.selectIndexValuesByRoomID(indicesBatch, roomID)
+}
+
+func (is *IndexService) selectIndexValuesByRoomID(indicesBatch *[]model.Index, roomID uint) (map[string]float64, error) {
 	type Result struct {
 		code  string
 		value float64
 	}
+	var err error
 	indexValues := make(chan Result)
 	for _, index := range *indicesBatch {
 		go func(i model.Index) {

@@ -17,7 +17,7 @@ func init() {
 }
 
 func TestAddIndex(t *testing.T) {
-	_, _ = indexDao.DeleteIndexByCode("test_index", true)
+	_, _ = indexDao.DeleteIndexByCode("test_index")
 	index := model.Index{}
 	index.Type = model.ITNormal
 	index.Code = "test_index"
@@ -41,7 +41,7 @@ func TestAddDuplicateIndex(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	} else {
-		t.Error("重复插入相同code的index")
+		t.Error("重复添加同code的index")
 	}
 }
 
@@ -102,7 +102,7 @@ func TestSelectNonExistIndexByCode(t *testing.T) {
 }
 
 func TestSelectIndexByCodeBatch(t *testing.T) {
-	indices, err := indexDao.SelectIndexByCodeBatch([]string{
+	indices, err := indexDao.SelectIndexByCodes([]string{
 		"turnover",
 		"half of turnover recent 3 min",
 		"turnover*4",

@@ -24,7 +24,7 @@ func TestAddTask(t *testing.T) {
 	task := model.Task{}
 	task.Code = code
 	task.Name = name
-	task.RuleID = 0
+	task.RuleID = 14
 	task.Frequency = 15
 	task.Enable = true
 	task.Status = model.TSRunning

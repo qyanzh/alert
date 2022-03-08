@@ -55,7 +55,7 @@ func TestRawExpr(t *testing.T) {
 
 func TestComputationalIndex(t *testing.T) {
 	code := "turnover*4"
-	_, err := indexEvaluator.indexDao.DeleteIndexByCode(code, true)
+	_, err := indexEvaluator.indexDao.DeleteIndexByCode(code)
 	if err != nil {
 		t.Error(err)
 	}

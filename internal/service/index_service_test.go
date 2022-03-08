@@ -15,7 +15,7 @@ func init() {
 	indexService = NewIndexService()
 }
 
-func TestSelectRoomIndices(t *testing.T) {
+func TestSelectRoomIndicesByCodes(t *testing.T) {
 	indexBatch, err := indexService.SelectAllIndices()
 	if err != nil {
 		t.Error(err)
@@ -28,8 +28,21 @@ func TestSelectRoomIndices(t *testing.T) {
 	t.Log(indices)
 }
 
+func TestSelectRoomIndicesByIDs(t *testing.T) {
+	indexBatch, err := indexService.SelectAllIndices()
+	if err != nil {
+		t.Error(err)
+	}
+	ids := make([]uint, len(*indexBatch))
+	for _, index := range *indexBatch {
+		ids = append(ids, index.ID)
+	}
+	indices, err := indexService.SelectIndexValuesByIDsAndRoomID(ids, 0)
+	t.Log(indices)
+}
+
 func TestAddIndex(t *testing.T) {
-	_, err := indexService.indexDao.DeleteIndexByCode("turnover_test_service3", true)
+	_, err := indexService.indexDao.DeleteIndexByCode("turnover_test_service3")
 	index, err := indexService.AddIndex("营业额", "turnover_test_service3", "raw[sum(turnover)]", 0)
 	if err != nil {
 		t.Error(err)
