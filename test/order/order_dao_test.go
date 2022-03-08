@@ -46,7 +46,7 @@ func TestUpdateOrder(t *testing.T) {
 func TestSelectOrderByTimeRange(t *testing.T) {
 	end := time.Now()
 	begin := time.Now().Add(-120 * time.Minute)
-	orders, _ := orderDao.SelectOrderByRoomIDTimeRange(0, begin, end)
+	orders, _ := orderDao.SelectOrdersByRoomIDTimeRange(0, begin, end)
 	fmt.Println(orders)
 }
 

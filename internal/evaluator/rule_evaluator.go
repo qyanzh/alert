@@ -234,3 +234,25 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 	}
 	return &nodes, nil
 }
+
+type stack []rune
+
+func (s stack) push(v rune) stack {
+	return append(s, v)
+}
+
+func (s stack) pop() (stack, rune) {
+	l := len(s)
+	if l == 0 {
+		return s[:], 0
+	}
+	return s[:l-1], s[l-1]
+}
+
+func (s stack) peek() rune {
+	l := len(s)
+	if l == 0 {
+		return 0
+	}
+	return s[len(s)-1]
+}

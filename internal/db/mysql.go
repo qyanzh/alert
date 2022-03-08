@@ -1,7 +1,6 @@
 package db
 
 import (
-	"alert/internal/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -30,14 +29,14 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = DbClient.AutoMigrate(
-		&model.Alert{},
-		&model.Index{},
-		&model.Order{},
-		&model.Rule{},
-		//&model.Task{},
-	)
-	if err != nil {
-		log.Panic(err)
-	}
+	//err = DbClient.AutoMigrate(
+	//	&model.Alert{},
+	//	&model.Index{},
+	//	&model.Order{},
+	//	&model.Rule{},
+	//	&model.Task{},
+	//)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
 }

@@ -6,6 +6,7 @@
 package model
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"time"
 )
@@ -23,9 +24,25 @@ type Index struct {
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
+func (index *Index) String() string {
+	return fmt.Sprintf("Index{ID=%d, Code=%s, Name=%s, Type=%v, Expr=%s, Serialized=%s, timeRange=%d}",
+		index.ID, index.Code, index.Name, index.Type, index.Expr, index.Serialized, index.TimeRange)
+}
+
 type IndexType uint8
 
 const (
-	Normal IndexType = iota
-	Computational
+	ITNormal IndexType = iota + 1
+	ITComputational
 )
+
+func (it *IndexType) String() string {
+	var s string
+	switch *it {
+	case ITNormal:
+		s = "普通型"
+	case ITComputational:
+		s = "计算型"
+	}
+	return s
+}
