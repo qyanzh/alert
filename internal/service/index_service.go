@@ -71,23 +71,10 @@ func (is *IndexService) SelectIndexValuesByCodesAndRoomID(codes []string, roomID
 	if err != nil {
 		return nil, err
 	}
-	return is.selectIndexValuesByRoomID(indicesBatch, roomID)
-}
-
-func (is *IndexService) SelectIndexValuesByIDsAndRoomID(ids []uint, roomID uint) (map[string]float64, error) {
-	indicesBatch, err := is.indexDao.SelectIndexByIDs(ids)
-	if err != nil {
-		return nil, err
-	}
-	return is.selectIndexValuesByRoomID(indicesBatch, roomID)
-}
-
-func (is *IndexService) selectIndexValuesByRoomID(indicesBatch *[]model.Index, roomID uint) (map[string]float64, error) {
 	type Result struct {
 		code  string
 		value float64
 	}
-	var err error
 	indexValues := make(chan Result)
 	for _, index := range *indicesBatch {
 		go func(i model.Index) {
@@ -102,6 +89,33 @@ func (is *IndexService) selectIndexValuesByRoomID(indicesBatch *[]model.Index, r
 	for range *indicesBatch {
 		result := <-indexValues
 		m[result.code] = result.value
+	}
+	return m, err
+}
+
+func (is *IndexService) SelectIndexValuesByIDsAndRoomID(ids []uint, roomID uint) (map[uint]float64, error) {
+	indicesBatch, err := is.indexDao.SelectIndexByIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+	type Result struct {
+		id    uint
+		value float64
+	}
+	indexValues := make(chan Result)
+	for _, index := range *indicesBatch {
+		go func(i model.Index) {
+			value, innerError := is.indexEvaluator.Eval(&i, roomID)
+			if innerError != nil {
+				err = innerError
+			}
+			indexValues <- Result{id: i.ID, value: value}
+		}(index)
+	}
+	m := make(map[uint]float64)
+	for range *indicesBatch {
+		result := <-indexValues
+		m[result.id] = result.value
 	}
 	return m, err
 }
