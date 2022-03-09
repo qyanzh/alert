@@ -47,19 +47,22 @@ func (is *IndexService) UpdateIndex(index *model.Index) error {
 }
 
 func (is *IndexService) AddIndex(name, code, expr string, timeRange uint) (*model.Index, error) {
-	serialized, indexType, err := indices.InfixToPostExprJson(expr)
-	if err != nil {
-		return nil, fmt.Errorf("adding index(code=%s, expr=%s): %v", code, expr, err)
-	}
+	indexType := indices.ExprType(expr)
 	newIndex := model.Index{
-		Code:       code,
-		Name:       name,
-		Type:       indexType,
-		Expr:       expr,
-		Serialized: serialized,
-		TimeRange:  timeRange,
+		Code:      code,
+		Name:      name,
+		Type:      indexType,
+		Expr:      expr,
+		TimeRange: timeRange,
 	}
-	_, err = is.indexDao.AddIndex(&newIndex)
+	if indexType == model.ITComputational {
+		serialized, err := indices.InfixToPostExprJson(expr)
+		if err != nil {
+			return nil, fmt.Errorf("adding index(code=%s, expr=%s): %v", code, expr, err)
+		}
+		newIndex.Serialized = serialized
+	}
+	_, err := is.indexDao.AddIndex(&newIndex)
 	if err != nil {
 		return nil, err
 	}

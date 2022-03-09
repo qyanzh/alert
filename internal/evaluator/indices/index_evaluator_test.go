@@ -33,7 +33,7 @@ func TestEval(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	result, err := indexEvaluator.eval(postExpr, 0, 0)
+	result, err := indexEvaluator.evalComputational(postExpr, 0, 0)
 	t.Log("expr: " + expr)
 	t.Log(postExpr)
 	t.Log(result)
@@ -46,7 +46,7 @@ func TestRawExpr(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(postExpr)
-	result, err := indexEvaluator.eval(postExpr, 0, 0)
+	result, err := indexEvaluator.evalComputational(postExpr, 0, 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -63,7 +63,7 @@ func TestComputationalIndex(t *testing.T) {
 	index.Code = code
 	index.Type = model.ITComputational
 	index.Expr = "index[turnover*2] * num[2]"
-	json, _, err := InfixToPostExprJson(index.Expr)
+	json, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,7 +80,7 @@ func TestComputationalIndex(t *testing.T) {
 func TestSyntaxErrorExprNoNum(t *testing.T) {
 	index := model.Index{}
 	index.Expr = "index[turnover*2] * 2"
-	_, _, err := InfixToPostExprJson(index.Expr)
+	_, err := InfixToPostExprJson(index.Expr)
 	if err != nil {
 		t.Log(err)
 	}
@@ -91,7 +91,7 @@ func TestSyntaxErrorExprCapitalNum(t *testing.T) {
 	index.Expr = "index[turnover*2} * num[2]"
 	pe, err := infixToPostExpr(index.Expr)
 	t.Log(pe)
-	json, _, err := InfixToPostExprJson(index.Expr)
+	json, err := InfixToPostExprJson(index.Expr)
 	if err == nil {
 		t.Error(fmt.Errorf("syntax error not detected: %s", index.Expr))
 	}
