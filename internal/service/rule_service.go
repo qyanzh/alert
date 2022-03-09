@@ -89,9 +89,12 @@ func (rs *RuleService) checkANum(index float64, op string, num float64) (bool, e
 }
 
 func (rs *RuleService) checkNormalRule(normalRule *rules.NormalRule, roomId uint) (bool, error) {
-	//indexnum:=
-	indexNum := 0.0
-	return rs.checkANum(indexNum, normalRule.Op, normalRule.Number)
+	id := []uint{normalRule.IndexId}
+	indexNum, _ := rs.indexService.SelectIndexValuesByIDsAndRoomID(id, roomId)
+	//if err!=nil{
+	//	return false,err
+	//}
+	return rs.checkANum(indexNum[id[0]], normalRule.Op, normalRule.Number)
 }
 
 type boolStack []bool
@@ -113,10 +116,7 @@ func (rs *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap map[u
 	var err error
 	for _, value := range *completeRule {
 		if value.Type == rules.RULENODE {
-			ruleId, ok := value.Content.(uint)
-			if !ok {
-				return errors.New("id转换uint出错")
-			}
+			ruleId := value.Content
 			rule, ok := ruleMap[ruleId]
 			if !ok {
 				rule, err = rs.getRuleById(ruleId)
@@ -143,7 +143,7 @@ func (rs *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap ma
 	var err error
 	for _, value := range *completeRule {
 		if value.Type == rules.RULENODE {
-			rule := ruleMap[value.Content.(uint)]
+			rule := ruleMap[value.Content]
 			var r bool
 			if rule.Type == model.NORMALRULE {
 				normalRule := rules.GetNormalRule(rule.Serialized)
@@ -163,7 +163,7 @@ func (rs *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap ma
 			if len(s) < 2 {
 				return false, errors.New("请检查语法")
 			}
-			op := value.Content.(rune)
+			op := value.Content
 			r1 := s.Top()
 			s.Pop()
 			r2 := s.Top()
@@ -193,7 +193,10 @@ func (rs *RuleService) checkCompleteRule(completeRule *rules.CompleteRule, roomI
 	if err != nil {
 		return false, err
 	}
-	indexMap := make(map[uint]float64, 0)
+	indexMap, err := rs.indexService.SelectIndexValuesByIDsAndRoomID(ids, roomId)
+	//if err != nil {
+	//	return false, err
+	//}
 	return rs.checkAllNum(completeRule, indexMap, ruleMap)
 }
 

@@ -38,14 +38,14 @@ func TestAddRuleFault(t *testing.T) {
 func TestCheckRule(t *testing.T) {
 	var i uint
 	want := []bool{true, true, true, false, false, true, false, false, true, true}
-	for i = 11; i <= 20; i++ {
+	for i = 23; i <= 32; i++ {
 		rule, _ := ruleServcie.SelectRuleById(i)
 		r, err := ruleServcie.CheckRule(rule.Code)
 		if err != nil {
-			print(err.Error())
+			t.Error(err.Error())
 		}
-		if r != want[i-11] {
-			t.Error()
+		if r != want[i-23] {
+			t.Error(i)
 		}
 	}
 }

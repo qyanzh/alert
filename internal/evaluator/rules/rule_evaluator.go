@@ -4,7 +4,6 @@ import (
 	"alert/internal/dao"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
 )
@@ -33,21 +32,9 @@ const (
 
 type CompleteNode struct {
 	Type    CompleteType
-	Content interface{}
+	Content uint
 }
 
-func (r *CompleteNode) PrintContent() {
-	if r.Type == RULENODE {
-		x, _ := r.Content.(uint)
-		print(x)
-	} else if r.Type == RULEOP {
-		x, _ := r.Content.(rune)
-		fmt.Printf("%c", x)
-	} else if r.Type == RULENUMBER {
-		x, _ := r.Content.(float64)
-		print(x)
-	}
-}
 func (r *NormalRuleNode) ToJson() []byte {
 	s, err := json.Marshal(r)
 	if err != nil {
@@ -211,7 +198,7 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 				// 弹出栈中优先级>=当前运算符的运算符
 				for top := opStack.peek(); top != 0 && top != '(' && logicOpGE(top, r); top = opStack.peek() {
 					opStack, _ = opStack.pop()
-					nodes = append(nodes, CompleteNode{Type: RULEOP, Content: top})
+					nodes = append(nodes, CompleteNode{Type: RULEOP, Content: uint(top)})
 				}
 				opStack = opStack.push(r)
 			} else if expr[st] == '(' {
@@ -221,7 +208,7 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 				for top := opStack.peek(); top != 0; top = opStack.peek() {
 					opStack, _ = opStack.pop()
 					if top != '(' {
-						nodes = append(nodes, CompleteNode{Type: RULEOP, Content: top})
+						nodes = append(nodes, CompleteNode{Type: RULEOP, Content: uint(top)})
 					} else {
 						break
 					}
@@ -233,7 +220,7 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 	}
 	for top := opStack.peek(); top != 0; top = opStack.peek() {
 		opStack, _ = opStack.pop()
-		nodes = append(nodes, CompleteNode{Type: RULEOP, Content: top})
+		nodes = append(nodes, CompleteNode{Type: RULEOP, Content: uint(top)})
 	}
 	return &nodes, nil
 }
