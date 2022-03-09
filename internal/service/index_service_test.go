@@ -29,23 +29,40 @@ func TestSelectRoomIndicesByCodes(t *testing.T) {
 }
 
 func TestSelectRoomIndicesByIDs(t *testing.T) {
-	indexBatch, err := indexService.SelectAllIndices()
+	allIndices, err := indexService.SelectAllIndices()
 	if err != nil {
 		t.Error(err)
 	}
-	ids := make([]uint, len(*indexBatch))
-	for _, index := range *indexBatch {
+	ids := make([]uint, len(*allIndices))
+	for _, index := range *allIndices {
 		ids = append(ids, index.ID)
 	}
-	indices, err := indexService.SelectIndexValuesByIDsAndRoomID(ids, 0)
-	t.Log(indices)
+	results, err := indexService.SelectIndexValuesByIDsAndRoomID(ids, 0)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(results)
+
 }
 
 func TestAddIndex(t *testing.T) {
-	_, err := indexService.indexDao.DeleteIndexByCode("turnover_test_service3")
-	index, err := indexService.AddIndex("营业额", "turnover_test_service3", "raw[sum(turnover)]", 0)
-	if err != nil {
-		t.Error(err)
+	type temp struct {
+		code      string
+		name      string
+		expr      string
+		timeRange uint
 	}
-	t.Logf("%v", index)
+	exprs := []temp{
+		//{"turnover", "总营业额", "sum(turnover)", 0},
+		//{"half of turnover recent 20 min", "最近20分钟营业额的一半", "index[turnover] / num[2]", 1200},
+		//{"half of turnover recent 1 hour", "最近一小时营业额的一半", "index[turnover] / num[2]", 3600},
+		//{"number of orders", "总订单量", "count(*)", 0},
+		{"number of orders computational", "总订单量(计算型)", "raw[count(*)]", 0},
+	}
+	for _, e := range exprs {
+		_, err := indexService.AddIndex(e.name, e.code, e.expr, e.timeRange)
+		if err != nil {
+			t.Error(err)
+		}
+	}
 }

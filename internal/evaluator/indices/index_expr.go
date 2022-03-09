@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -35,24 +36,24 @@ const (
 	raw                  // sql表达式，直接拼接在select中
 )
 
-func InfixToPostExprJson(infix string) ([]byte, model.IndexType, error) {
+func ExprType(expr string) model.IndexType {
+	if strings.ContainsAny(expr, "[]") {
+		return model.ITComputational
+	} else {
+		return model.ITNormal
+	}
+}
+
+func InfixToPostExprJson(infix string) ([]byte, error) {
 	postExpr, err := infixToPostExpr(infix)
 	if err != nil {
-		return nil, 0, fmt.Errorf("syntax error: %v", err)
-	}
-	// 判定是否有子指标
-	indexType := model.ITNormal
-	for _, node := range *postExpr {
-		if node.NodeType == code {
-			indexType = model.ITComputational
-			break
-		}
+		return nil, fmt.Errorf("syntax error: %v", err)
 	}
 	js, err := postExpr.json()
 	if err != nil {
-		return nil, 0, fmt.Errorf("post expr(from %s) to json: %v", infix, err)
+		return nil, fmt.Errorf("post expr(from %s) to json: %v", infix, err)
 	}
-	return js, indexType, nil
+	return js, nil
 }
 
 func postExprFromJson(bs []byte) (*postExpr, error) {

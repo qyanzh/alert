@@ -22,26 +22,44 @@ func NewIndexEvaluator(indexDao *dao.IndexDao, orderDao *dao.OrderDao) *IndexEva
 }
 
 func (e *IndexEvaluator) Eval(index *model.Index, roomID uint) (float64, error) {
-	postExpr, err := postExprFromJson(index.Serialized)
+	var result float64
+	var err error
+	if index.Type == model.ITNormal {
+		result, err = e.evalNormal(index.Expr, roomID, index.TimeRange)
+	} else if index.Type == model.ITComputational {
+		pe, innerErr := postExprFromJson(index.Serialized)
+		if innerErr != nil {
+			return 0, innerErr
+		}
+		result, err = e.evalComputational(pe, roomID, index.TimeRange)
+	}
+	if err != nil {
+		return 0, fmt.Errorf("evaluating expr=%s failed: %v", index.Expr, err)
+	}
+	return result, nil
+}
+
+func (e *IndexEvaluator) evalNormal(expr string, roomID, timeRange uint) (float64, error) {
+	r, err := e.orderDao.SelectValue(expr, roomID, timeRange)
 	if err != nil {
 		return 0, err
 	}
-	return e.eval(postExpr, roomID, index.TimeRange)
+	return r, nil
 }
 
-// eval 对后缀表达式求值
-func (e *IndexEvaluator) eval(indexExpr *postExpr, roomID, timeRange uint) (float64, error) {
+// evalComputational 对后缀表达式求值
+func (e *IndexEvaluator) evalComputational(indexExpr *postExpr, roomID, timeRange uint) (float64, error) {
 	numStack := list.New() // 存放操作数(float64)
 	for _, node := range *indexExpr {
 		switch node.NodeType {
 		case op:
 			operand2, err := popOperand(numStack)
 			if err != nil {
-				return 0, fmt.Errorf("evaluate failed, handling Op %v: %v", op, err)
+				return 0, fmt.Errorf("handling Op %v: %v", op, err)
 			}
 			operand1, err := popOperand(numStack)
 			if err != nil {
-				return 0, fmt.Errorf("evaluate failed, handling Op %v: %v", op, err)
+				return 0, fmt.Errorf("handling Op %v: %v", op, err)
 			}
 			numStack.PushBack(doOperation(operand1, operand2, node.Op))
 		case num:
@@ -49,23 +67,23 @@ func (e *IndexEvaluator) eval(indexExpr *postExpr, roomID, timeRange uint) (floa
 		case code:
 			indexValue, err := e.extractSubIndexValue(node.Code, roomID, timeRange)
 			if err != nil {
-				return 0, fmt.Errorf("evaluate failed, extracting subIndex(Code=%s): %v", node.Code, err)
+				return 0, fmt.Errorf("handling subIndex(Code=%s): %v", node.Code, err)
 			}
 			numStack.PushBack(indexValue)
 		case raw:
-			r, err := e.orderDao.SelectValue(node.Raw, roomID, timeRange)
+			r, err := e.evalNormal(node.Raw, roomID, timeRange)
 			if err != nil {
-				return 0, err
+				return 0, fmt.Errorf("handling raw expr=%s: %v", node.Raw, err)
 			}
 			numStack.PushBack(r)
 		}
 	}
 	if numStack.Len() != 1 {
-		return 0, fmt.Errorf("evaluate failed, stack: %v", numStack)
+		return 0, fmt.Errorf("stack: %v", numStack)
 	}
 	value, ok := numStack.Back().Value.(float64)
 	if !ok {
-		return 0, fmt.Errorf("evaluate failed, unexpected element:%v", numStack.Back().Value)
+		return 0, fmt.Errorf("unexpected element:%v", numStack.Back().Value)
 	}
 	return value, nil
 }
@@ -114,7 +132,7 @@ func (e *IndexEvaluator) extractSubIndexValue(indexCode string, roomID, timeRang
 		if err != nil {
 			return 0, fmt.Errorf("deserialize index json(IndexCode=%s): %v", indexCode, err)
 		}
-		result, err = e.eval(subExpr, roomID, timeRange)
+		result, err = e.evalComputational(subExpr, roomID, timeRange)
 		if err != nil {
 			return 0, fmt.Errorf("evaluating sub index %v: %v", index, err)
 		}
