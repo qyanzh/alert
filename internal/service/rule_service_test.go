@@ -28,6 +28,18 @@ func TestAddRule(t *testing.T) {
 	ruleStr = "rule[test0]^rule[test2]"
 	ruleServcie.AddRule(0, "测试3", "test3", false, ruleStr) //T
 }
+func TestAddRules2(t *testing.T) {
+	ruleServcie.AddRule(0, "测试5", "test5", true, "index[number of orders] > 8")                       //T
+	ruleServcie.AddRule(0, "测试6", "test6", true, "index[number of orders computational] < 12")        //T
+	ruleServcie.AddRule(0, "测试7", "test7", true, "index[average order turnover] >= 10")               //T
+	ruleServcie.AddRule(0, "测试8", "test8", true, "index[average order turnover computational2] > 10") //F
+	ruleServcie.AddRule(0, "测试9", "test9", true, "index[turnover] > 120")                             //F
+
+	ruleStr := "rule[test5] | rule[test6]"
+	ruleServcie.AddRule(0, "测试10", "test10", false, ruleStr) //T
+	ruleStr = "(rule[test5]&rule[test6])|(rule[test7]^rule[test8])&(rule[test9])"
+	ruleServcie.AddRule(0, "测试11", "test11", false, ruleStr) //T
+}
 func TestAddRuleFault(t *testing.T) {
 	ruleStr := "rule[test4]|rule[test3]"
 	_, err := ruleServcie.AddRule(0, "测试4", "test4", false, ruleStr)
@@ -37,8 +49,8 @@ func TestAddRuleFault(t *testing.T) {
 }
 func TestCheckRule(t *testing.T) {
 	var i uint
-	want := []bool{true, true, true, false, false, true, false, false, true, true}
-	for i = 23; i <= 32; i++ {
+	want := []bool{true, true, true, false, false, true, false, false, true, true, true, true, true, false, false, true, true}
+	for i = 39; i >= 23; i-- {
 		rule, _ := ruleServcie.SelectRuleById(i)
 		r, err := ruleServcie.CheckRule(rule.Code)
 		if err != nil {
