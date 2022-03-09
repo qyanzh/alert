@@ -80,7 +80,7 @@ func (rs *RuleService) checkANum(index float64, op string, num float64) (bool, e
 	case ">=":
 		return num-index < 1e-8, nil
 	case ">":
-		return num > index, nil
+		return index > num, nil
 	case "!=":
 		return math.Abs(index-num) >= 1e-8, nil
 	default:
@@ -147,7 +147,7 @@ func (rs *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap ma
 			var r bool
 			if rule.Type == model.NORMALRULE {
 				normalRule := rules.GetNormalRule(rule.Serialized)
-				r, err = rs.checkANum(indexMap[rule.Id], normalRule.Op, normalRule.Number)
+				r, err = rs.checkANum(indexMap[normalRule.IndexId], normalRule.Op, normalRule.Number)
 				if err != nil {
 					return false, err
 				}
