@@ -3,6 +3,7 @@ package service
 import (
 	"alert/internal/dao"
 	"alert/internal/model"
+	"encoding/json"
 	"time"
 )
 
@@ -14,9 +15,13 @@ func NewAlertService() *AlertService {
 	return &AlertService{alertDao: *dao.NewAlertDao()}
 }
 
-func (as *AlertService) AddAlert(ruleId uint, t time.Time) error {
-	alert := model.Alert{RuleId: ruleId, Time: t}
-	_, err := as.alertDao.AddAlert(&alert)
+func (as *AlertService) AddAlert(ruleId uint, t time.Time, indexNum map[uint]float64) error {
+	index, err := json.Marshal(indexNum)
+	if err != nil {
+		return err
+	}
+	alert := model.Alert{RuleId: ruleId, Time: t, IndexNum: index}
+	_, err = as.alertDao.AddAlert(&alert)
 	return err
 }
 

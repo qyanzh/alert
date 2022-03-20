@@ -88,13 +88,14 @@ func (rs *RuleService) checkANum(index float64, op string, num float64) (bool, e
 	}
 }
 
-func (rs *RuleService) checkNormalRule(normalRule *rules.NormalRule, roomId uint) (bool, error) {
+func (rs *RuleService) checkNormalRule(normalRule *rules.NormalRule, roomId uint) (bool, map[uint]float64, error) {
 	id := []uint{normalRule.IndexId}
 	indexNum, _ := rs.indexService.SelectIndexValuesByIDsAndRoomID(id, roomId)
 	//if err!=nil{
 	//	return false,err
 	//}
-	return rs.checkANum(indexNum[id[0]], normalRule.Op, normalRule.Number)
+	rb, err := rs.checkANum(indexNum[id[0]], normalRule.Op, normalRule.Number)
+	return rb, indexNum, err
 }
 
 type boolStack []bool
@@ -185,25 +186,26 @@ func (rs *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap ma
 	return s.Top(), nil
 }
 
-func (rs *RuleService) checkCompleteRule(completeRule *rules.CompleteRule, roomId uint) (bool, error) {
+func (rs *RuleService) checkCompleteRule(completeRule *rules.CompleteRule, roomId uint) (bool, map[uint]float64, error) {
 
 	ids := make([]uint, 0)
 	ruleMap := make(map[uint]*model.Rule, 0)
 	err := rs.getAllNum(completeRule, ruleMap, &ids)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	indexMap, err := rs.indexService.SelectIndexValuesByIDsAndRoomID(ids, roomId)
 	//if err != nil {
 	//	return false, err
 	//}
-	return rs.checkAllNum(completeRule, indexMap, ruleMap)
+	rb, err := rs.checkAllNum(completeRule, indexMap, ruleMap)
+	return rb, indexMap, err
 }
 
-func (rs *RuleService) CheckRule(code string) (bool, error) {
+func (rs *RuleService) CheckRule(code string) (bool, map[uint]float64, error) {
 	rule, err := rs.SelectRule(code)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	if rule.Type == model.NORMALRULE {
 		return rs.checkNormalRule(rules.GetNormalRule(rule.Serialized), rule.RoomId)
@@ -212,10 +214,10 @@ func (rs *RuleService) CheckRule(code string) (bool, error) {
 	}
 }
 
-func (rs *RuleService) CheckRuleWithId(id uint) (bool, error) {
+func (rs *RuleService) CheckRuleWithId(id uint) (bool, map[uint]float64, error) {
 	rule, err := rs.SelectRuleById(id)
 	if err != nil {
-		return false, nil
+		return false, nil, err
 	}
 	if rule.Type == model.NORMALRULE {
 		return rs.checkNormalRule(rules.GetNormalRule(rule.Serialized), rule.RoomId)

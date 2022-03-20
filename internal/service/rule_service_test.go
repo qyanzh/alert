@@ -52,7 +52,7 @@ func TestCheckRule(t *testing.T) {
 	want := []bool{true, true, true, false, false, true, false, false, true, true, true, true, true, false, false, true, true}
 	for i = 39; i >= 23; i-- {
 		rule, _ := ruleServcie.SelectRuleById(i)
-		r, err := ruleServcie.CheckRule(rule.Code)
+		r, _, err := ruleServcie.CheckRule(rule.Code)
 		if err != nil {
 			t.Error(err.Error())
 		}

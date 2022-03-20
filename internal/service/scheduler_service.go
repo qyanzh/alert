@@ -87,7 +87,7 @@ func (ss *SchedulerService) doCheckTaskRule(task model.Task) error {
 	if err := ss.taskService.UpdateTaskStatusRunningByCode(task.Code); err != nil {
 		return err
 	}
-	isSatisfy, err := ss.ruleService.CheckRuleWithId(task.RuleID)
+	isSatisfy, indexMap, err := ss.ruleService.CheckRuleWithId(task.RuleID)
 	if err != nil {
 		if err := ss.taskService.UpdateTaskFailByCode(task.Code, err.Error()); err != nil {
 			return err
@@ -95,7 +95,7 @@ func (ss *SchedulerService) doCheckTaskRule(task model.Task) error {
 		return err
 	}
 	if !isSatisfy {
-		if err := ss.alertService.AddAlert(task.RuleID, time.Now()); err != nil {
+		if err := ss.alertService.AddAlert(task.RuleID, time.Now(), indexMap); err != nil {
 			return err
 		}
 	}

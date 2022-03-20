@@ -19,9 +19,11 @@ func TestAddAlert(t *testing.T) {
 		now.Add(5 * time.Hour),
 		now.Add(10 * time.Hour),
 	}
+	indexMap := map[uint]float64{0: 100, 1: 200.0}
+
 	for _, value := range ruleIds {
 		for _, value2 := range times {
-			err := alertService.AddAlert(value, value2)
+			err := alertService.AddAlert(value, value2, indexMap)
 			if err != nil {
 				print(err.Error())
 			}
