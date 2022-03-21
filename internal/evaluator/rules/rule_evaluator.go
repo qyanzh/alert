@@ -93,6 +93,12 @@ const (
 func getNext(expr string, nowst int, isSingleOp bool) (st int, ed int, nowType strType) {
 	nowType = OTHER
 	for st = nowst; st < len(expr); st++ {
+		if expr[st] == '{' {
+			st++
+			ed = st + 1
+			nowType = NUMTYPE
+			break
+		}
 		if expr[st] == '[' {
 			st++
 			nowType = CODETYPE
@@ -163,6 +169,7 @@ func ToNormalRuleExpr(expr string) (NormalRuleNode, error) {
 type CompleteRule []CompleteNode
 
 var logicOpPriority = map[rune]int8{
+	'!': 4,
 	'&': 3,
 	'^': 2,
 	'|': 1,
@@ -172,7 +179,7 @@ func logicOpGE(o1, o2 rune) bool {
 	return logicOpPriority[o1]-logicOpPriority[o2] >= 0
 }
 func isLogicOp(c rune) bool {
-	return c == '&' || c == '|' || c == '^'
+	return c == '&' || c == '|' || c == '^' || c == '!'
 }
 func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 	nodes := make(CompleteRule, 0)
@@ -191,10 +198,19 @@ func ToCompleteRuleExpr(expr string) (*CompleteRule, error) {
 			}
 			nodes = append(nodes, CompleteNode{Type: RULENODE, Content: index.Id})
 		} else if nowType == NUMTYPE {
-			return &nodes, errors.New("请检查语法")
+			if expr[st] == 'T' {
+				nodes = append(nodes, CompleteNode{Type: RULENUMBER, Content: 1})
+			} else if expr[st] == 'F' {
+				nodes = append(nodes, CompleteNode{Type: RULENUMBER, Content: 0})
+			} else {
+				return &nodes, errors.New("请检查语法")
+			}
 		} else if nowType == OPTYPE {
 			r := rune(expr[st])
 			if isLogicOp(r) {
+				if r == '!' {
+					nodes = append(nodes, CompleteNode{Type: RULENUMBER, Content: 1})
+				}
 				// 弹出栈中优先级>=当前运算符的运算符
 				for top := opStack.peek(); top != 0 && top != '(' && logicOpGE(top, r); top = opStack.peek() {
 					opStack, _ = opStack.pop()

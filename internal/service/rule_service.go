@@ -113,7 +113,12 @@ func (rs *RuleService) getRuleById(ruleId uint) (*model.Rule, error) {
 	return rs.ruleDao.SelectRuleByID(ruleId)
 }
 
-func (rs *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap map[uint]*model.Rule, ids *[]uint) error {
+const MAXDEPTH = 10
+
+func (rs *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap map[uint]*model.Rule, ids *[]uint, nowDepth uint) error {
+	if nowDepth == MAXDEPTH {
+		return errors.New("可能出现无限递归")
+	}
 	var err error
 	for _, value := range *completeRule {
 		if value.Type == rules.RULENODE {
@@ -129,7 +134,7 @@ func (rs *RuleService) getAllNum(completeRule *rules.CompleteRule, ruleMap map[u
 			if rule.Type == model.NORMALRULE {
 				*ids = append(*ids, rules.GetNormalRule(rule.Serialized).IndexId)
 			} else {
-				err = rs.getAllNum(rules.GetCompleteRule(rule.Serialized), ruleMap, ids)
+				err = rs.getAllNum(rules.GetCompleteRule(rule.Serialized), ruleMap, ids, nowDepth+1)
 				if err != nil {
 					return err
 				}
@@ -173,10 +178,16 @@ func (rs *RuleService) checkAllNum(completeRule *rules.CompleteRule, indexMap ma
 				s.Push(r1 && r2)
 			} else if op == '|' {
 				s.Push(r1 || r2)
-			} else if op == '^' {
+			} else if op == '^' || op == '!' {
 				s.Push((r1 || r2) && !(r1 && r2))
 			} else {
 				return false, errors.New("请检查语法")
+			}
+		} else if value.Type == rules.RULENUMBER {
+			if value.Type == 1 {
+				s.Push(true)
+			} else {
+				s.Push(false)
 			}
 		}
 	}
@@ -190,7 +201,7 @@ func (rs *RuleService) checkCompleteRule(completeRule *rules.CompleteRule, roomI
 
 	ids := make([]uint, 0)
 	ruleMap := make(map[uint]*model.Rule, 0)
-	err := rs.getAllNum(completeRule, ruleMap, &ids)
+	err := rs.getAllNum(completeRule, ruleMap, &ids, 1)
 	if err != nil {
 		return false, nil, err
 	}
