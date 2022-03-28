@@ -25,7 +25,7 @@ func TestAddRule(t *testing.T) {
 	ruleServcie.AddRule(0, "测试1", "test1", false, ruleStr) //F
 	ruleStr = "(rule[sum of turnover up 80]&rule[sum of turnover under 120])|(rule[sum of turnover under 120]^rule[sum of turnover up  100])&(rule[sum of turnover up  100])"
 	ruleServcie.AddRule(0, "测试2", "test2", false, ruleStr) //T
-	ruleStr = "rule[test0]^rule[test2]"
+	ruleStr = "rule[test0]^rule[test2]"                    //test0 test2 ^
 	ruleServcie.AddRule(0, "测试3", "test3", false, ruleStr) //T
 }
 func TestAddRules2(t *testing.T) {

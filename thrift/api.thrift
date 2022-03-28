@@ -23,6 +23,7 @@ service RuleService{
     rule.RuleResponse SelectRule(1:string code)
     rule.RulesResponse SelectAllRule()
     rule.RuleResponse AddRule(1:i64 roomId,2:string name,3:string code,4:bool ruleType,5:string content)
+    rule.CheckResponse CheckRule(1:rule.Rule rule)
     common.ErrResponse DeleteRule(1:string code)
     common.ErrResponse UpdateRule(1:rule.Rule rule)
 }
