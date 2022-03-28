@@ -7,8 +7,8 @@ struct Task{
     4:i64 RuleId
     5:i64 Frequency
     6:bool Enable
-    7:string LastTime
-    8:string LastStatus
+    7:string NextTime
+    8:i16 LastStatus
 }
 struct TaskResponse{
     1:Task task

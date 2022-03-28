@@ -63,9 +63,23 @@ func (rs *RuleService) DeleteRule(code string) error {
 	_, err := rs.ruleDao.DeleteRuleByCode(code)
 	return err
 }
-
-func (rs *RuleService) UpdateRule(rule model.Rule) error {
-	_, err := rs.ruleDao.UpdateRule(&rule)
+func (rs *RuleService) EvaluatorRule(rule *model.Rule) ([]byte, error) {
+	if rule.Type == model.NORMALRULE {
+		ruleNode, err := rules.ToNormalRuleExpr(rule.Expr)
+		if err != nil {
+			return nil, err
+		}
+		return ruleNode.ToJson(), err
+	} else {
+		ruleNode, err := rules.ToCompleteRuleExpr(rule.Expr)
+		if err != nil {
+			return nil, err
+		}
+		return ruleNode.ToJson(), err
+	}
+}
+func (rs *RuleService) UpdateRule(rule *model.Rule) error {
+	_, err := rs.ruleDao.UpdateRule(rule)
 	return err
 }
 

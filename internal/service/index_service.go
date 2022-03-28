@@ -45,7 +45,14 @@ func (is *IndexService) UpdateIndex(index *model.Index) error {
 	_, err := is.indexDao.UpdateIndex(index)
 	return err
 }
-
+func (is *IndexService) EvaluatorIndex(index *model.Index) (model.IndexType, []byte, error) {
+	indexType := indices.ExprType(index.Expr)
+	if indexType == model.ITComputational {
+		serialized, err := indices.InfixToPostExprJson(index.Expr)
+		return indexType, serialized, err
+	}
+	return indexType, nil, nil
+}
 func (is *IndexService) AddIndex(name, code, expr string, timeRange uint) (*model.Index, error) {
 	indexType := indices.ExprType(expr)
 	newIndex := model.Index{

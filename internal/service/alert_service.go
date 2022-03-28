@@ -25,6 +25,12 @@ func (as *AlertService) AddAlert(ruleId uint, t time.Time, indexNum map[uint]flo
 	return err
 }
 
+func (as *AlertService) AddAlertByByte(ruleId uint, t time.Time, indexNum []byte) error {
+	alert := model.Alert{RuleId: ruleId, Time: t, IndexNum: indexNum}
+	_, err := as.alertDao.AddAlert(&alert)
+	return err
+}
+
 func (as *AlertService) SelectAlert(ruleId uint, startTime time.Time, endTime time.Time) (*[]model.Alert, error) {
 	return as.alertDao.SelectAlertByOther(ruleId, startTime, endTime)
 }
