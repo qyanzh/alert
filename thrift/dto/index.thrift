@@ -10,13 +10,10 @@ struct Index{
 }
 struct IndexResponse{
     1:Index index
-    2:string err
 }
 struct IndexsResponse{
     1:list<Index> indexs
-    2:string err
 }
 struct MapIndexResponse{
     1:map<string,Index> indexs
-    2:string err
 }

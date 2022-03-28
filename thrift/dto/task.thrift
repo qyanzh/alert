@@ -12,9 +12,7 @@ struct Task{
 }
 struct TaskResponse{
     1:Task task
-    2:string err
 }
 struct TasksResponse{
     1:list<Task> tasks
-    2:string err
 }

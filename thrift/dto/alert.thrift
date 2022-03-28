@@ -7,5 +7,4 @@ struct Alert{
 
 struct AlertsResponse{
     1:list<Alert> alerts
-    2:string err
 }

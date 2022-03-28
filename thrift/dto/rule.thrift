@@ -10,13 +10,10 @@ struct Rule{
 }
 struct RuleResponse{
     1:Rule rule
-    2:string err
 }
 struct RulesResponse{
     1:list<Rule> rules
-    2:string err
 }
 struct CheckResponse{
     1:bool result
-    2:string err
 }
