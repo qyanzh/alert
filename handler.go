@@ -10,20 +10,22 @@ import (
 	T "time"
 )
 
-var alertService service.AlertService
-var indexService service.IndexService
-var ruleService service.RuleService
-var taskService service.TaskService
-
-func init() {
-	alertService = *service.NewAlertService()
-	indexService = *service.NewIndexService()
-	ruleService = *service.NewRuleService()
-	taskService = *service.NewTaskService()
+func NewCombineServiceImpl() *CombineServiceImpl {
+	cs := CombineServiceImpl{}
+	cs.alertService = *service.NewAlertService()
+	cs.indexService = *service.NewIndexService()
+	cs.ruleService = *service.NewRuleService()
+	cs.taskService = *service.NewTaskService()
+	return &cs
 }
 
 // CombineServiceImpl implements the last service interface defined in the IDL.
-type CombineServiceImpl struct{}
+type CombineServiceImpl struct {
+	alertService service.AlertService
+	indexService service.IndexService
+	ruleService  service.RuleService
+	taskService  service.TaskService
+}
 
 func convertIndexToDto(index model.Index) *rpc_dto.Index {
 	dtoIndex := rpc_dto.Index{
@@ -80,11 +82,11 @@ func (s *CombineServiceImpl) AddAlert(ctx context.Context, ruleId int64, time st
 	if err != nil {
 		return
 	}
-	var indexNumConvert map[uint]float64
+	indexNumConvert := make(map[uint]float64)
 	for v1, v2 := range indexNum {
 		indexNumConvert[uint(v1)] = v2
 	}
-	err = alertService.AddAlert(uint(ruleId), t, indexNumConvert)
+	err = s.alertService.AddAlert(uint(ruleId), t, indexNumConvert)
 	return
 }
 
@@ -102,7 +104,7 @@ func (s *CombineServiceImpl) SelectAlert(ctx context.Context, ruleId int64, star
 	if err != nil {
 		return
 	}
-	tmpAlert, err := alertService.SelectAlert(uint(ruleId), st, ed)
+	tmpAlert, err := s.alertService.SelectAlert(uint(ruleId), st, ed)
 	if err != nil {
 		return
 	}
@@ -117,6 +119,7 @@ func (s *CombineServiceImpl) SelectAlert(ctx context.Context, ruleId int64, star
 			indexNumConvert[int64(v1)] = v2
 		}
 		a := rpc_dto.Alert{Id: int64(v.Id), Time: v.Time.Format(T.ANSIC), IndexNum: indexNumConvert}
+		resp = &rpc_dto.AlertsResponse{}
 		resp.Alerts = append(resp.Alerts, &a)
 	}
 	return
@@ -125,10 +128,11 @@ func (s *CombineServiceImpl) SelectAlert(ctx context.Context, ruleId int64, star
 // SelectIndex implements the IndexServiceImpl interface.
 func (s *CombineServiceImpl) SelectIndex(ctx context.Context, code string) (resp *rpc_dto.IndexResponse, err error) {
 	// TODO: Your code here...
-	index, err := indexService.SelectIndexByCode(code)
+	index, err := s.indexService.SelectIndexByCode(code)
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.IndexResponse{}
 	resp.Index = convertIndexToDto(*index)
 	return
 }
@@ -136,10 +140,11 @@ func (s *CombineServiceImpl) SelectIndex(ctx context.Context, code string) (resp
 // SelectAllIndex implements the IndexServiceImpl interface.
 func (s *CombineServiceImpl) SelectAllIndex(ctx context.Context) (resp *rpc_dto.IndexsResponse, err error) {
 	// TODO: Your code here...
-	indexs, err := indexService.SelectAllIndices()
+	indexs, err := s.indexService.SelectAllIndices()
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.IndexsResponse{}
 	for _, v := range *indexs {
 		resp.Indexs = append(resp.Indexs, convertIndexToDto(v))
 	}
@@ -149,10 +154,11 @@ func (s *CombineServiceImpl) SelectAllIndex(ctx context.Context) (resp *rpc_dto.
 // AddIndex implements the IndexServiceImpl interface.
 func (s *CombineServiceImpl) AddIndex(ctx context.Context, name string, code string, content string, timeRange int64) (resp *rpc_dto.IndexResponse, err error) {
 	// TODO: Your code here...
-	index, err := indexService.AddIndex(name, code, content, uint(timeRange))
+	index, err := s.indexService.AddIndex(name, code, content, uint(timeRange))
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.IndexResponse{}
 	resp.Index = convertIndexToDto(*index)
 	return
 }
@@ -160,14 +166,14 @@ func (s *CombineServiceImpl) AddIndex(ctx context.Context, name string, code str
 // DeleteIndex implements the IndexServiceImpl interface.
 func (s *CombineServiceImpl) DeleteIndex(ctx context.Context, code string) (err error) {
 	// TODO: Your code here...
-	err = indexService.DeleteIndex(code)
+	err = s.indexService.DeleteIndex(code)
 	return
 }
 
 // UpdateIndex implements the IndexServiceImpl interface.
 func (s *CombineServiceImpl) UpdateIndex(ctx context.Context, index *rpc_dto.Index) (err error) {
 	// TODO: Your code here...
-	modelIndex, err := indexService.SelectIndexByID(uint(index.Id))
+	modelIndex, err := s.indexService.SelectIndexByID(uint(index.Id))
 	if err != nil {
 		return err
 	}
@@ -177,20 +183,21 @@ func (s *CombineServiceImpl) UpdateIndex(ctx context.Context, index *rpc_dto.Ind
 	modelIndex.Name = index.Name
 	if modelIndex.Expr != index.Expr {
 		modelIndex.Expr = index.Expr
-		modelIndex.Type, modelIndex.Serialized, err = indexService.EvaluatorIndex(modelIndex)
+		modelIndex.Type, modelIndex.Serialized, err = s.indexService.EvaluatorIndex(modelIndex)
 		if err != nil {
 			return
 		}
 	}
 	modelIndex.TimeRange = uint(index.TimeRange)
-	err = indexService.UpdateIndex(modelIndex)
+	err = s.indexService.UpdateIndex(modelIndex)
 	return
 }
 
 // SelectRoomIndex implements the IndexServiceImpl interface.
 func (s *CombineServiceImpl) SelectRoomIndex(ctx context.Context, code []string, roomId int64) (resp *rpc_dto.MapIndexResponse, err error) {
 	// TODO: Your code here...
-	roomIndex, err := indexService.SelectIndexValuesByCodesAndRoomID(code, uint(roomId))
+	roomIndex, err := s.indexService.SelectIndexValuesByCodesAndRoomID(code, uint(roomId))
+	resp = &rpc_dto.MapIndexResponse{}
 	resp.Indexs = roomIndex
 	return
 }
@@ -198,10 +205,11 @@ func (s *CombineServiceImpl) SelectRoomIndex(ctx context.Context, code []string,
 // SelectRule implements the RuleServiceImpl interface.
 func (s *CombineServiceImpl) SelectRule(ctx context.Context, code string) (resp *rpc_dto.RuleResponse, err error) {
 	// TODO: Your code here...
-	rule, err := ruleService.SelectRule(code)
+	rule, err := s.ruleService.SelectRule(code)
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.RuleResponse{}
 	resp.Rule = convertRuleToDto(*rule)
 	return
 }
@@ -209,10 +217,11 @@ func (s *CombineServiceImpl) SelectRule(ctx context.Context, code string) (resp 
 // SelectAllRule implements the RuleServiceImpl interface.
 func (s *CombineServiceImpl) SelectAllRule(ctx context.Context) (resp *rpc_dto.RulesResponse, err error) {
 	// TODO: Your code here...
-	rules, err := ruleService.SelectAllRules()
+	rules, err := s.ruleService.SelectAllRules()
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.RulesResponse{}
 	for _, v := range *rules {
 		resp.Rules = append(resp.Rules, convertRuleToDto(v))
 	}
@@ -222,10 +231,11 @@ func (s *CombineServiceImpl) SelectAllRule(ctx context.Context) (resp *rpc_dto.R
 // AddRule implements the RuleServiceImpl interface.
 func (s *CombineServiceImpl) AddRule(ctx context.Context, roomId int64, name string, code string, ruleType bool, content string) (resp *rpc_dto.RuleResponse, err error) {
 	// TODO: Your code here...
-	rule, err := ruleService.AddRule(uint(roomId), name, code, ruleType, content)
+	rule, err := s.ruleService.AddRule(uint(roomId), name, code, ruleType, content)
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.RuleResponse{}
 	resp.Rule = convertRuleToDto(*rule)
 	return
 }
@@ -233,7 +243,8 @@ func (s *CombineServiceImpl) AddRule(ctx context.Context, roomId int64, name str
 // CheckRule implements the RuleServiceImpl interface.
 func (s *CombineServiceImpl) CheckRule(ctx context.Context, rule string) (resp *rpc_dto.CheckResponse, err error) {
 	// TODO: Your code here...
-	r, _, err := ruleService.CheckRule(rule)
+	r, _, err := s.ruleService.CheckRule(rule)
+	resp = &rpc_dto.CheckResponse{}
 	resp.Result_ = r
 	return
 }
@@ -241,14 +252,14 @@ func (s *CombineServiceImpl) CheckRule(ctx context.Context, rule string) (resp *
 // DeleteRule implements the RuleServiceImpl interface.
 func (s *CombineServiceImpl) DeleteRule(ctx context.Context, code string) (err error) {
 	// TODO: Your code here...
-	err = ruleService.DeleteRule(code)
+	err = s.ruleService.DeleteRule(code)
 	return
 }
 
 // UpdateRule implements the RuleServiceImpl interface.
 func (s *CombineServiceImpl) UpdateRule(ctx context.Context, rule *rpc_dto.Rule) (err error) {
 	// TODO: Your code here...
-	modelRule, err := ruleService.SelectRuleById(uint(rule.Id))
+	modelRule, err := s.ruleService.SelectRuleById(uint(rule.Id))
 	if err != nil {
 		return err
 	}
@@ -264,22 +275,23 @@ func (s *CombineServiceImpl) UpdateRule(ctx context.Context, rule *rpc_dto.Rule)
 			modelRule.Type = model.COMPLEXRULE
 		}
 		modelRule.Expr = rule.Expr
-		modelRule.Serialized, err = ruleService.EvaluatorRule(modelRule)
+		modelRule.Serialized, err = s.ruleService.EvaluatorRule(modelRule)
 		if err != nil {
 			return
 		}
 	}
-	err = ruleService.UpdateRule(modelRule)
+	err = s.ruleService.UpdateRule(modelRule)
 	return
 }
 
 // SelectTask implements the TaskServiceImpl interface.
 func (s *CombineServiceImpl) SelectTask(ctx context.Context, code string) (resp *rpc_dto.TaskResponse, err error) {
 	// TODO: Your code here...
-	task, err := taskService.SelectTaskByCode(code)
+	task, err := s.taskService.SelectTaskByCode(code)
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.TaskResponse{}
 	resp.Task = convertTaskToDto(*task)
 	return
 }
@@ -287,10 +299,11 @@ func (s *CombineServiceImpl) SelectTask(ctx context.Context, code string) (resp 
 // AddTask implements the TaskServiceImpl interface.
 func (s *CombineServiceImpl) AddTask(ctx context.Context, name string, code string, ruleId int64, frequency int64) (resp *rpc_dto.TaskResponse, err error) {
 	// TODO: Your code here...
-	task, err := taskService.AddTask(code, name, uint(ruleId), uint(frequency))
+	task, err := s.taskService.AddTask(code, name, uint(ruleId), uint(frequency))
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.TaskResponse{}
 	resp.Task = convertTaskToDto(*task)
 	return
 }
@@ -298,20 +311,21 @@ func (s *CombineServiceImpl) AddTask(ctx context.Context, name string, code stri
 // DeleteTask implements the TaskServiceImpl interface.
 func (s *CombineServiceImpl) DeleteTask(ctx context.Context, code string) (err error) {
 	// TODO: Your code here...
-	err = taskService.DeleteTaskByCode(code)
+	err = s.taskService.DeleteTaskByCode(code)
 	return
 }
 
 func (s *CombineServiceImpl) UpdateTaskEnable(ctx context.Context, code string, enable bool) (err error) {
-	err = taskService.UpdateTaskEnableByCode(code, enable)
+	err = s.taskService.UpdateTaskEnableByCode(code, enable)
 	return
 }
 
 func (s *CombineServiceImpl) SelectRunnableTask(ctx context.Context) (resp *rpc_dto.TasksResponse, err error) {
-	tasks, err := taskService.SelectRunnableTasks()
+	tasks, err := s.taskService.SelectRunnableTasks()
 	if err != nil {
 		return
 	}
+	resp = &rpc_dto.TasksResponse{}
 	for _, v := range *tasks {
 		resp.Tasks = append(resp.Tasks, convertTaskToDto(v))
 	}
@@ -321,7 +335,7 @@ func (s *CombineServiceImpl) SelectRunnableTask(ctx context.Context) (resp *rpc_
 // UpdateTask implements the TaskServiceImpl interface.
 func (s *CombineServiceImpl) UpdateTask(ctx context.Context, task *rpc_dto.Task) (err error) {
 	// TODO: Your code here...
-	modelTask, err := taskService.SelectTaskByID(uint(task.Id))
+	modelTask, err := s.taskService.SelectTaskByID(uint(task.Id))
 	if err != nil {
 		return
 	}
@@ -332,6 +346,6 @@ func (s *CombineServiceImpl) UpdateTask(ctx context.Context, task *rpc_dto.Task)
 	modelTask.Enable = task.Enable
 	modelTask.Frequency = uint(task.Frequency)
 	modelTask.RuleID = uint(task.RuleId)
-	err = taskService.UpdateTask(modelTask)
+	err = s.taskService.UpdateTask(modelTask)
 	return
 }
